@@ -1,0 +1,9 @@
+sf_train_dir/
+results/
+wandb/
+.venv/
+__pycache__/
+*.egg-info/
+*.pyc
+.DS_Store
+_vizdoom.ini

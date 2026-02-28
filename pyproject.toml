@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "doom-arena"
+version = "0.1.0"
+description = "ViZDoom deathmatch training, evaluation, and human-vs-AI play with Sample Factory"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "sample-factory[vizdoom] @ git+https://github.com/wendlerc/sample-factory.git@doom-arena",
+    "opencv-python-headless",
+    "wandb",
+    "huggingface-hub",
+    "numpy",
+    "torch",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["doom_arena"]
+
+[project.scripts]
+doom-train = "doom_arena.train:main"
+doom-run = "doom_arena.run:main"
+doom-eval = "doom_arena.evaluate:main"
+doom-monitor = "doom_arena.monitor:main"
+doom-play = "doom_arena.play:main"
+doom-download = "doom_arena.download_models:main"
