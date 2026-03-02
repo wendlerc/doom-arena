@@ -1,19 +1,22 @@
 """
-WebDataset multiplayer recording pipeline.
+Demo-based WebDataset recording pipeline for Doom gameplay.
 
-Records two AI players playing Doom deathmatch at 640x480, storing frames as
-H.264 video, actions (button presses + turn delta), rewards, and audio in
-WebDataset tar shards. Supports multiple maps, bot counts, and checkpoint sampling.
+Approach: play at native 160x120 (matching training resolution exactly),
+record ViZDoom .lmp demo files, then replay at 640x480 for high-res video.
+This gives correct policy behavior AND high-quality video output.
+
+Supports two modes:
+  - pvp: 2 AI players fighting each other via ViZDoom multiplayer
+  - bots: 1 AI player + N bots (more reliable, no sync issues)
 
 Usage:
-    doom-record --experiment seed0 --total-hours 100 --num-workers 8 --device cuda
+    doom-record --experiment seed0 --total-hours 100 --num-workers 8 --device cpu
 """
 from __future__ import annotations
 
 import argparse
 import io
 import json
-import math
 import multiprocessing as mp
 import os
 import random
@@ -35,13 +38,12 @@ BASE_PORT = 5400
 DECISION_INTERVAL = 2  # model decides every 2 tics (matching training env_frameskip=2)
 GAME_FPS = 35
 NUM_WEAPONS = 8
+REPLAY_RESOLUTION = (640, 480)
 
 # Scenarios with weights
-# Note: bots are disabled in 2-player multiplayer to avoid ViZDoom sync deadlocks.
-# Two AI players fight each other directly in deathmatch mode.
 SCENARIOS = {
-    "dwango5_3min": {"wad": "dwango5.wad", "map": "map01", "bots": 0, "timelimit": 3.0, "weight": 0.40},
-    "dwango5_5min": {"wad": "dwango5.wad", "map": "map01", "bots": 0, "timelimit": 5.0, "weight": 0.45},
+    "dwango5_3min": {"wad": "dwango5.wad", "map": "map01", "bots": 4, "timelimit": 3.0, "weight": 0.40},
+    "dwango5_5min": {"wad": "dwango5.wad", "map": "map01", "bots": 4, "timelimit": 5.0, "weight": 0.45},
     "ssl2_duel": {"wad": "ssl2.wad", "map": "map01", "bots": 0, "timelimit": 3.0, "weight": 0.15},
 }
 
@@ -59,11 +61,25 @@ TRAINING_BUTTONS = [
 
 BUTTON_NAMES = [str(b).split(".")[-1] for b in TRAINING_BUTTONS]
 
+GAME_VARIABLES = [
+    vzd.GameVariable.SELECTED_WEAPON, vzd.GameVariable.SELECTED_WEAPON_AMMO,
+    vzd.GameVariable.HEALTH, vzd.GameVariable.ARMOR, vzd.GameVariable.USER2,
+    vzd.GameVariable.ATTACK_READY, vzd.GameVariable.PLAYER_COUNT,
+    vzd.GameVariable.FRAGCOUNT, vzd.GameVariable.DEATHCOUNT,
+    vzd.GameVariable.HITCOUNT, vzd.GameVariable.DAMAGECOUNT,
+]
+
+DEATHMATCH_ARGS = (
+    "+sv_forcerespawn 1 +sv_noautoaim 1 +sv_respawnprotect 1 "
+    "+sv_spawnfarthest 1 +sv_nocrouch 1 +sv_nojump 1 "
+    "+sv_nofreelook 1 +sv_noexit 1 "
+    "+viz_respawn_delay 0 +viz_nocheat 1"
+)
+
 
 def _sf_scenarios_dir() -> str:
     """Get the SF scenarios directory where dwango5.wad, ssl2.wad etc. live."""
     import sf_examples.vizdoom.doom.scenarios as sc_mod
-    # Namespace package: __file__ is None, but __path__ works
     return list(sc_mod.__path__)[0]
 
 
@@ -82,23 +98,81 @@ def _npy_bytes(arr: np.ndarray) -> bytes:
     return buf.getvalue()
 
 
+def _add_game_variables(game: vzd.DoomGame):
+    """Add all game variables needed for measurements and stats."""
+    for var in GAME_VARIABLES:
+        game.add_available_game_variable(var)
+    for i in range(10):
+        game.add_available_game_variable(getattr(vzd.GameVariable, f"WEAPON{i}"))
+    for i in range(10):
+        game.add_available_game_variable(getattr(vzd.GameVariable, f"AMMO{i}"))
+
+
 # --- Game Setup ---
 
-def create_game(
+def create_play_game(
     wad_path: str,
     doom_map: str,
-    port: int,
-    is_host: bool,
     timelimit: float,
+    port: int | None = None,
+    is_host: bool = True,
     num_bots: int = 0,
-    enable_audio: bool = True,
 ) -> vzd.DoomGame:
-    """Create a DoomGame instance configured for multiplayer recording at 640x480."""
-    game = vzd.DoomGame()
+    """Create game at 160x120 for policy inference + demo recording.
 
+    Uses PLAYER mode for single-player (bots), ASYNC_PLAYER for multiplayer
+    (avoids sync deadlocks; at 160x120 processing is fast enough to not skip).
+    """
+    game = vzd.DoomGame()
     game.set_doom_scenario_path(wad_path)
     game.set_doom_map(doom_map)
+    game.set_screen_resolution(vzd.ScreenResolution.RES_160X120)
+    game.set_screen_format(vzd.ScreenFormat.CRCGCB)
+    game.set_render_hud(True)
+    game.set_render_crosshair(True)
+    game.set_render_weapon(True)
+    game.set_render_decals(False)
+    game.set_render_particles(False)
+    game.set_window_visible(False)
 
+    if port is not None:
+        # Multiplayer needs ASYNC_PLAYER to avoid deadlocks
+        game.set_mode(vzd.Mode.ASYNC_PLAYER)
+    else:
+        game.set_mode(vzd.Mode.PLAYER)
+
+    for button in TRAINING_BUTTONS:
+        game.add_available_button(button)
+    _add_game_variables(game)
+
+    if port is not None:
+        # Multiplayer (pvp mode)
+        if is_host:
+            game.add_game_args(
+                f"-host 2 -port {port} -deathmatch "
+                f"+timelimit {timelimit:.1f} {DEATHMATCH_ARGS} "
+                "+viz_connect_timeout 60"
+            )
+            game.add_game_args("+name P1 +colorset 0")
+        else:
+            game.add_game_args(f"-join 127.0.0.1:{port} +viz_connect_timeout 30")
+            game.add_game_args("+name P2 +colorset 3")
+    else:
+        # Single player with bots
+        game.add_game_args(
+            f"-deathmatch +timelimit {timelimit:.1f} {DEATHMATCH_ARGS}"
+        )
+        game.add_game_args("+name Player +colorset 0")
+
+    game.set_episode_timeout(int(timelimit * 60 * game.get_ticrate()))
+    return game
+
+
+def create_replay_game(wad_path: str, doom_map: str) -> vzd.DoomGame:
+    """Create game at 640x480 SPECTATOR mode for replaying demos as high-res video."""
+    game = vzd.DoomGame()
+    game.set_doom_scenario_path(wad_path)
+    game.set_doom_map(doom_map)
     game.set_screen_resolution(vzd.ScreenResolution.RES_640X480)
     game.set_screen_format(vzd.ScreenFormat.CRCGCB)
     game.set_render_hud(True)
@@ -107,51 +181,11 @@ def create_game(
     game.set_render_decals(False)
     game.set_render_particles(False)
     game.set_window_visible(False)
-    game.set_mode(vzd.Mode.ASYNC_PLAYER)
+    game.set_mode(vzd.Mode.SPECTATOR)
 
     for button in TRAINING_BUTTONS:
         game.add_available_button(button)
-
-    for var in [
-        vzd.GameVariable.SELECTED_WEAPON, vzd.GameVariable.SELECTED_WEAPON_AMMO,
-        vzd.GameVariable.HEALTH, vzd.GameVariable.ARMOR, vzd.GameVariable.USER2,
-        vzd.GameVariable.ATTACK_READY, vzd.GameVariable.PLAYER_COUNT,
-        vzd.GameVariable.FRAGCOUNT, vzd.GameVariable.DEATHCOUNT,
-        vzd.GameVariable.HITCOUNT, vzd.GameVariable.DAMAGECOUNT,
-    ]:
-        game.add_available_game_variable(var)
-    for i in range(10):
-        game.add_available_game_variable(getattr(vzd.GameVariable, f"WEAPON{i}"))
-    for i in range(10):
-        game.add_available_game_variable(getattr(vzd.GameVariable, f"AMMO{i}"))
-
-    if enable_audio:
-        try:
-            game.set_sound_enabled(True)
-            game.set_audio_buffer_enabled(True)
-            game.set_audio_sampling_rate(vzd.SamplingRate.SR_44100)
-            game.set_audio_buffer_size(4)
-        except Exception:
-            pass
-
-    if is_host:
-        # -deathmatch: proper deathmatch mode (matching SF training config).
-        # ASYNC_PLAYER mode avoids multiplayer sync deadlocks at 640x480.
-        game.add_game_args(
-            f"-host 2 -port {port} -deathmatch "
-            f"+timelimit {timelimit:.1f} "
-            "+sv_forcerespawn 1 +sv_noautoaim 1 +sv_respawnprotect 1 "
-            "+sv_spawnfarthest 1 +sv_nocrouch 1 +sv_nojump 1 "
-            "+sv_nofreelook 1 +sv_noexit 1 "
-            "+viz_respawn_delay 0 +viz_nocheat 1 "
-            "+viz_connect_timeout 60"
-        )
-        game.add_game_args("+name P1 +colorset 0")
-    else:
-        game.add_game_args(f"-join 127.0.0.1:{port} +viz_connect_timeout 30")
-        game.add_game_args("+name P2 +colorset 3")
-
-    game.set_episode_timeout(int(timelimit * 60 * game.get_ticrate()))
+    _add_game_variables(game)
 
     return game
 
@@ -186,17 +220,12 @@ def extract_measurements(game: vzd.DoomGame) -> np.ndarray:
 
 
 def preprocess_for_model(screen_buffer: np.ndarray, measurements: np.ndarray, device: torch.device) -> dict:
-    """Convert raw 640x480 CHW screen buffer to model input format (128x72 CHW).
+    """Convert native 160x120 CHW screen buffer to model input format (128x72 CHW).
 
-    Two-step resize to match training pipeline:
-      Training: ViZDoom renders at 160x120 → ResizeWrapper scales to 128x72
-      Here: 640x480 → 160x120 (approximate native) → 128x72
+    Single-step INTER_NEAREST resize — pixel-identical to training's ResizeWrapper.
     """
     hwc = np.transpose(screen_buffer, (1, 2, 0))
-    # Step 1: downscale to training render resolution
-    small = cv2.resize(hwc, (160, 120), interpolation=cv2.INTER_AREA)
-    # Step 2: resize to model input (matches ResizeWrapper which uses INTER_NEAREST)
-    resized = cv2.resize(small, (128, 72), interpolation=cv2.INTER_NEAREST)
+    resized = cv2.resize(hwc, (128, 72), interpolation=cv2.INTER_NEAREST)
     chw = np.transpose(resized, (2, 0, 1))
 
     obs_t = torch.from_numpy(chw).float().unsqueeze(0).to(device)
@@ -352,34 +381,129 @@ def encode_video(frames: list, fps: int = GAME_FPS) -> bytes:
         os.unlink(tmp_path)
 
 
-# --- Episode Recording ---
+# --- Demo Replay ---
 
-def record_episode(
+def replay_demo(wad_path: str, doom_map: str, demo_path: str) -> list:
+    """Replay a .lmp demo at 640x480 and return list of RGB frames."""
+    game = create_replay_game(wad_path, doom_map)
+    game.init()
+    game.replay_episode(demo_path)
+
+    frames = []
+    while not game.is_episode_finished():
+        state = game.get_state()
+        if state is not None:
+            frame = np.transpose(state.screen_buffer, (1, 2, 0))
+            frames.append(frame)
+        game.advance_action()
+
+    game.close()
+    return frames
+
+
+# --- Single-Player Episode (bots mode) ---
+
+def _play_single_player(
     actor_critic,
     rnn_size: int,
     device: torch.device,
-    scenario_name: str,
-    scenario: dict,
-    port: int,
-    checkpoint_name: str = "",
-    enable_audio: bool = True,
+    wad_path: str,
+    doom_map: str,
+    timelimit: float,
+    num_bots: int,
+    demo_path: str,
 ) -> dict | None:
-    """Record a single multiplayer episode. Returns episode data dict or None on failure."""
+    """Play one episode at 160x120 with bots, recording a demo. Returns play data."""
+    game = create_play_game(wad_path, doom_map, timelimit, num_bots=num_bots)
+    game.init()
+    for _ in range(num_bots):
+        game.send_game_command("addbot")
 
-    try:
-        wad_path = _find_wad(scenario["wad"])
-    except FileNotFoundError as e:
-        print(f"[record] {e}")
+    game.new_episode(demo_path)
+
+    rnn = torch.zeros(1, rnn_size, device=device)
+    action = [0.0] * len(TRAINING_BUTTONS)
+    zero_action = [0.0] * len(TRAINING_BUTTONS)
+    all_actions = []
+    all_rewards = []
+
+    tic = 0
+    t0 = time.perf_counter()
+
+    while not game.is_episode_finished():
+        state = game.get_state()
+
+        if state is None:
+            # Death tic — still record action/reward for frame alignment
+            all_actions.append(np.array(zero_action, dtype=np.float32))
+            game.make_action(zero_action)
+            all_rewards.append(float(game.get_last_reward()))
+            if game.is_player_dead():
+                game.respawn_player()
+            tic += 1
+            continue
+
+        if tic % DECISION_INTERVAL == 0:
+            with torch.no_grad():
+                meas = extract_measurements(game)
+                obs = preprocess_for_model(state.screen_buffer, meas, device)
+                norm = actor_critic.normalize_obs(obs)
+                result = actor_critic(norm, rnn)
+                rnn = result["new_rnn_states"]
+                action = convert_action(result["actions"].cpu().numpy())
+
+        all_actions.append(np.array(action, dtype=np.float32))
+        game.make_action([float(a) for a in action])
+        all_rewards.append(float(game.get_last_reward()))
+
+        if game.is_player_dead():
+            game.respawn_player()
+        tic += 1
+
+    duration = time.perf_counter() - t0
+
+    frag = game.get_game_variable(vzd.GameVariable.FRAGCOUNT)
+    death = game.get_game_variable(vzd.GameVariable.DEATHCOUNT)
+    hits = game.get_game_variable(vzd.GameVariable.HITCOUNT)
+    dmg = game.get_game_variable(vzd.GameVariable.DAMAGECOUNT)
+    game.close()
+
+    if not all_actions:
         return None
 
-    doom_map = scenario["map"]
-    timelimit = scenario["timelimit"]
-    num_bots = scenario["bots"]
+    return {
+        "actions": np.stack(all_actions),
+        "rewards": np.array(all_rewards, dtype=np.float32),
+        "game_tics": tic,
+        "duration_s": duration,
+        "frag": float(frag),
+        "death": float(death),
+        "hits": float(hits),
+        "damage": float(dmg),
+    }
 
-    host_game = create_game(wad_path, doom_map, port, True, timelimit, num_bots, enable_audio)
-    join_game = create_game(wad_path, doom_map, port, False, timelimit, 0, enable_audio)
 
-    # Init via threads (host blocks waiting for join to connect)
+# --- Multiplayer Episode (pvp mode) ---
+
+def _play_multiplayer(
+    actor_critic,
+    rnn_size: int,
+    device: torch.device,
+    wad_path: str,
+    doom_map: str,
+    timelimit: float,
+    port: int,
+) -> dict | None:
+    """Play one 2-player episode at 160x120, recording frames and actions.
+
+    Uses ASYNC_PLAYER mode with threaded make_action to avoid sync deadlocks.
+    No demo recording (not supported in ASYNC_PLAYER multiplayer) — instead
+    captures 160x120 frames directly and upscales to 640x480 for video.
+    """
+    host_game = create_play_game(wad_path, doom_map, timelimit, port=port, is_host=True)
+    join_game = create_play_game(wad_path, doom_map, timelimit, port=port, is_host=False)
+
+    # Init via threads (host blocks waiting for join)
     errors = [None, None]
 
     def init_host():
@@ -403,81 +527,93 @@ def record_episode(
     t_join.join(timeout=45)
 
     if errors[0] or errors[1]:
-        try:
-            host_game.close()
-        except Exception:
-            pass
-        try:
-            join_game.close()
-        except Exception:
-            pass
+        for g in [host_game, join_game]:
+            try:
+                g.close()
+            except Exception:
+                pass
         print(f"[record] Init failed: host={errors[0]}, join={errors[1]}")
         return None
 
-    # Add bots after init
-    if num_bots > 0:
-        for _ in range(num_bots):
-            host_game.send_game_command("addbot")
+    # Start episodes via threads (new_episode() syncs between players)
+    ep_errors = [None, None]
+    def start_host_ep():
+        try:
+            host_game.new_episode()
+        except Exception as e:
+            ep_errors[0] = e
+    def start_join_ep():
+        try:
+            join_game.new_episode()
+        except Exception as e:
+            ep_errors[1] = e
 
-    # RNN states
+    te_host = threading.Thread(target=start_host_ep)
+    te_join = threading.Thread(target=start_join_ep)
+    te_host.start()
+    te_join.start()
+    te_host.join(timeout=30)
+    te_join.join(timeout=30)
+
+    if ep_errors[0] or ep_errors[1]:
+        for g in [host_game, join_game]:
+            try:
+                g.close()
+            except Exception:
+                pass
+        print(f"[record] new_episode failed: host={ep_errors[0]}, join={ep_errors[1]}")
+        return None
+
     rnn_p1 = torch.zeros(1, rnn_size, device=device)
     rnn_p2 = torch.zeros(1, rnn_size, device=device)
-
-    # Current actions
     action_p1 = [0.0] * len(TRAINING_BUTTONS)
     action_p2 = [0.0] * len(TRAINING_BUTTONS)
+    zero_action = [0.0] * len(TRAINING_BUTTONS)
 
     frames_p1, frames_p2 = [], []
     actions_p1, actions_p2 = [], []
     rewards_p1, rewards_p2 = [], []
-    audio_chunks_p1, audio_chunks_p2 = [], []
 
     tic = 0
     t0 = time.perf_counter()
-    has_audio = False
+    last_progress = time.perf_counter()
     frag_p1 = frag_p2 = death_p1 = death_p2 = 0.0
 
     def _advance_both(act_h, act_j):
-        """Advance both games 1 tic using make_action (ASYNC_PLAYER mode)."""
-        host_game.make_action(act_h)
-        join_game.make_action(act_j)
-
-    zero_action = [0.0] * len(TRAINING_BUTTONS)
+        """Advance both games via threads to avoid multiplayer sync deadlocks."""
+        t1 = threading.Thread(target=host_game.make_action, args=(act_h,))
+        t2 = threading.Thread(target=join_game.make_action, args=(act_j,))
+        t1.start()
+        t2.start()
+        t1.join(timeout=10)
+        t2.join(timeout=10)
 
     while not host_game.is_episode_finished() and not join_game.is_episode_finished():
         state_p1 = host_game.get_state()
         state_p2 = join_game.get_state()
 
         if state_p1 is None or state_p2 is None:
-            # Player dead/respawning — advance both with zero action
+            # Death tic — record zero actions for frame alignment
+            actions_p1.append(np.array(zero_action, dtype=np.float32))
+            actions_p2.append(np.array(zero_action, dtype=np.float32))
             _advance_both(zero_action, zero_action)
+            rewards_p1.append(float(host_game.get_last_reward()))
+            rewards_p2.append(float(join_game.get_last_reward()))
             if host_game.is_player_dead():
                 host_game.respawn_player()
             if join_game.is_player_dead():
                 join_game.respawn_player()
             tic += 1
+            last_progress = time.perf_counter()
             continue
 
-        # Record frames (CHW → HWC)
+        # Record frames (160x120 → upscale to 640x480 later)
         frame_p1 = np.transpose(state_p1.screen_buffer, (1, 2, 0))
         frame_p2 = np.transpose(state_p2.screen_buffer, (1, 2, 0))
         frames_p1.append(frame_p1)
         frames_p2.append(frame_p2)
 
-        # Decision step (also capture audio here — buffer covers DECISION_INTERVAL tics)
         if tic % DECISION_INTERVAL == 0:
-            if enable_audio:
-                try:
-                    ab1 = state_p1.audio_buffer
-                    ab2 = state_p2.audio_buffer
-                    if ab1 is not None:
-                        audio_chunks_p1.append(ab1.copy())
-                        has_audio = True
-                    if ab2 is not None:
-                        audio_chunks_p2.append(ab2.copy())
-                except AttributeError:
-                    pass
-
             with torch.no_grad():
                 meas_p1 = extract_measurements(host_game)
                 obs_p1 = preprocess_for_model(state_p1.screen_buffer, meas_p1, device)
@@ -496,31 +632,32 @@ def record_episode(
         actions_p1.append(np.array(action_p1, dtype=np.float32))
         actions_p2.append(np.array(action_p2, dtype=np.float32))
 
-        # Track stats during episode (may not be readable after episode end)
         if tic % DECISION_INTERVAL == 0:
             frag_p1 = host_game.get_game_variable(vzd.GameVariable.FRAGCOUNT)
             frag_p2 = join_game.get_game_variable(vzd.GameVariable.FRAGCOUNT)
             death_p1 = host_game.get_game_variable(vzd.GameVariable.DEATHCOUNT)
             death_p2 = join_game.get_game_variable(vzd.GameVariable.DEATHCOUNT)
 
-        # Advance both games 1 tic
-        action_list_p1 = [float(a) for a in action_p1]
-        action_list_p2 = [float(a) for a in action_p2]
-        _advance_both(action_list_p1, action_list_p2)
-
+        act_list_p1 = [float(a) for a in action_p1]
+        act_list_p2 = [float(a) for a in action_p2]
+        _advance_both(act_list_p1, act_list_p2)
         rewards_p1.append(float(host_game.get_last_reward()))
         rewards_p2.append(float(join_game.get_last_reward()))
 
-        # Immediate respawn (matching SF's _process_game_step)
         if host_game.is_player_dead():
             host_game.respawn_player()
         if join_game.is_player_dead():
             join_game.respawn_player()
 
         tic += 1
+        last_progress = time.perf_counter()
+
+        # Deadlock detection
+        if time.perf_counter() - last_progress > 30:
+            print(f"[record] Deadlock detected at tic {tic}, aborting")
+            break
 
     duration = time.perf_counter() - t0
-    game_tics = tic
 
     host_game.close()
     join_game.close()
@@ -528,39 +665,165 @@ def record_episode(
     if not frames_p1:
         return None
 
-    # Encode videos
-    video_p1 = encode_video(frames_p1, GAME_FPS)
-    video_p2 = encode_video(frames_p2, GAME_FPS)
+    # Upscale 160x120 frames to 640x480 for video
+    w, h = REPLAY_RESOLUTION
+    upscaled_p1 = [cv2.resize(f, (w, h), interpolation=cv2.INTER_CUBIC) for f in frames_p1]
+    upscaled_p2 = [cv2.resize(f, (w, h), interpolation=cv2.INTER_CUBIC) for f in frames_p2]
 
-    result = {
-        "video_p1": video_p1,
-        "video_p2": video_p2,
-        "actions_p1": np.stack(actions_p1),
-        "actions_p2": np.stack(actions_p2),
-        "rewards_p1": np.array(rewards_p1, dtype=np.float32),
-        "rewards_p2": np.array(rewards_p2, dtype=np.float32),
-        "n_frames": len(frames_p1),
-        "game_tics": game_tics,
+    n_frames = len(upscaled_p1)
+    return {
+        "frames_p1": upscaled_p1,
+        "frames_p2": upscaled_p2,
+        "actions_p1": np.stack(actions_p1[:n_frames]),
+        "actions_p2": np.stack(actions_p2[:n_frames]),
+        "rewards_p1": np.array(rewards_p1[:n_frames], dtype=np.float32),
+        "rewards_p2": np.array(rewards_p2[:n_frames], dtype=np.float32),
+        "n_frames": n_frames,
+        "game_tics": tic,
         "duration_s": duration,
-        "scenario": scenario_name,
-        "map": doom_map,
-        "n_bots": num_bots,
-        "timelimit": timelimit,
-        "checkpoint": checkpoint_name,
-        "frag_p1": frag_p1,
-        "frag_p2": frag_p2,
-        "death_p1": death_p1,
-        "death_p2": death_p2,
-        "total_reward_p1": float(np.sum(rewards_p1)),
-        "total_reward_p2": float(np.sum(rewards_p2)),
+        "frag_p1": float(frag_p1),
+        "frag_p2": float(frag_p2),
+        "death_p1": float(death_p1),
+        "death_p2": float(death_p2),
     }
 
-    if has_audio and audio_chunks_p1:
-        result["audio_p1"] = np.concatenate(audio_chunks_p1, axis=0)
-    if has_audio and audio_chunks_p2:
-        result["audio_p2"] = np.concatenate(audio_chunks_p2, axis=0)
 
-    return result
+# --- Episode Recording (main entry point) ---
+
+def record_episode(
+    actor_critic,
+    rnn_size: int,
+    device: torch.device,
+    scenario_name: str,
+    scenario: dict,
+    port: int,
+    checkpoint_name: str = "",
+    mode: str = "bots",
+) -> dict | None:
+    """Record a single episode.
+
+    Bots mode: play at 160x120, save .lmp demo, replay at 640x480 for high-res video
+    PvP mode: play at 160x120 with 2 AI players (threaded), upscale frames to 640x480
+
+    Args:
+        mode: "bots" (1 player + bots, demo-based) or "pvp" (2 AI players, direct capture)
+    """
+    try:
+        wad_path = _find_wad(scenario["wad"])
+    except FileNotFoundError as e:
+        print(f"[record] {e}")
+        return None
+
+    doom_map = scenario["map"]
+    timelimit = scenario["timelimit"]
+    num_bots = scenario["bots"]
+
+    if mode == "pvp":
+        # --- PvP: direct frame capture at 160x120, upscale to 640x480 ---
+        play_data = _play_multiplayer(
+            actor_critic, rnn_size, device,
+            wad_path, doom_map, timelimit, port,
+        )
+        if play_data is None:
+            return None
+
+        n_frames = play_data["n_frames"]
+        video_p1 = encode_video(play_data["frames_p1"], GAME_FPS)
+        video_p2 = encode_video(play_data["frames_p2"], GAME_FPS)
+
+        return {
+            "video_p1": video_p1,
+            "video_p2": video_p2,
+            "demo_p1": None,
+            "demo_p2": None,
+            "actions_p1": play_data["actions_p1"],
+            "actions_p2": play_data["actions_p2"],
+            "rewards_p1": play_data["rewards_p1"],
+            "rewards_p2": play_data["rewards_p2"],
+            "n_frames": n_frames,
+            "game_tics": play_data["game_tics"],
+            "duration_s": play_data["duration_s"],
+            "scenario": scenario_name,
+            "map": doom_map,
+            "n_bots": num_bots,
+            "timelimit": timelimit,
+            "checkpoint": checkpoint_name,
+            "mode": mode,
+            "frag_p1": play_data["frag_p1"],
+            "frag_p2": play_data["frag_p2"],
+            "death_p1": play_data["death_p1"],
+            "death_p2": play_data["death_p2"],
+            "total_reward_p1": float(np.sum(play_data["rewards_p1"])),
+            "total_reward_p2": float(np.sum(play_data["rewards_p2"])),
+        }
+
+    else:
+        # --- Bots: demo-based (play at 160x120, replay at 640x480) ---
+        tmp_dir = tempfile.mkdtemp(prefix="doom_demo_")
+        demo_path = os.path.join(tmp_dir, "p1.lmp")
+
+        try:
+            play_data = _play_single_player(
+                actor_critic, rnn_size, device,
+                wad_path, doom_map, timelimit, num_bots,
+                demo_path,
+            )
+            if play_data is None:
+                return None
+
+            # Replay at 640x480
+            frames = replay_demo(wad_path, doom_map, demo_path)
+            demo_bytes = Path(demo_path).read_bytes()
+
+            if not frames:
+                return None
+
+            # Align: trim to match action count
+            n_actions = len(play_data["actions"])
+            if len(frames) > n_actions:
+                frames = frames[:n_actions]
+            elif len(frames) < n_actions:
+                play_data["actions"] = play_data["actions"][:len(frames)]
+                play_data["rewards"] = play_data["rewards"][:len(frames)]
+
+            n_frames = len(frames)
+            video_p1 = encode_video(frames, GAME_FPS)
+
+            return {
+                "video_p1": video_p1,
+                "video_p2": b"",
+                "demo_p1": demo_bytes,
+                "demo_p2": None,
+                "actions_p1": play_data["actions"][:n_frames],
+                "actions_p2": np.zeros((0, len(TRAINING_BUTTONS)), dtype=np.float32),
+                "rewards_p1": play_data["rewards"][:n_frames],
+                "rewards_p2": np.array([], dtype=np.float32),
+                "n_frames": n_frames,
+                "game_tics": play_data["game_tics"],
+                "duration_s": play_data["duration_s"],
+                "scenario": scenario_name,
+                "map": doom_map,
+                "n_bots": num_bots,
+                "timelimit": timelimit,
+                "checkpoint": checkpoint_name,
+                "mode": mode,
+                "frag_p1": play_data["frag"],
+                "frag_p2": 0.0,
+                "death_p1": play_data["death"],
+                "death_p2": 0.0,
+                "total_reward_p1": float(np.sum(play_data["rewards"][:n_frames])),
+                "total_reward_p2": 0.0,
+            }
+
+        finally:
+            try:
+                os.unlink(demo_path)
+            except OSError:
+                pass
+            try:
+                os.rmdir(tmp_dir)
+            except OSError:
+                pass
 
 
 # --- Scenario Sampling ---
@@ -581,7 +844,7 @@ def record_worker(
     train_dir: str,
     checkpoint_temp: float,
     device_str: str,
-    enable_audio: bool,
+    game_mode: str,
     output_dir: str,
     shard_size_mb: int,
     target_secs: float,
@@ -604,7 +867,7 @@ def record_worker(
         progress_queue.put(("error", worker_id, "No checkpoints found"))
         return
 
-    # Load initial model (will reload on checkpoint change)
+    # Load initial model
     current_exp = random.choice(list(all_checkpoints.keys()))
     current_ckpt_path = sample_checkpoint(all_checkpoints[current_exp], checkpoint_temp)
     actor_critic, rnn_size, dev = load_model(current_exp, train_dir, current_ckpt_path, device_str)
@@ -623,6 +886,7 @@ def record_worker(
                     "worker_id": worker_id,
                     "experiments": experiments,
                     "device": device_str,
+                    "mode": game_mode,
                     "target_hours": target_secs / 3600,
                 },
                 reinit=True,
@@ -658,7 +922,7 @@ def record_worker(
                     actor_critic, rnn_size, dev,
                     scenario_name, scenario, port,
                     checkpoint_name=current_ckpt_name,
-                    enable_audio=enable_audio,
+                    mode=game_mode,
                 )
             except Exception as e:
                 progress_queue.put(("error", worker_id, f"{scenario_name}: {e}"))
@@ -683,7 +947,9 @@ def record_worker(
                 "button_names": BUTTON_NAMES,
                 "decision_interval": DECISION_INTERVAL,
                 "fps": GAME_FPS,
-                "resolution": "640x480",
+                "play_resolution": "160x120",
+                "video_resolution": "640x480",
+                "mode": ep_data["mode"],
                 "n_frames": ep_data["n_frames"],
                 "total_reward_p1": ep_data["total_reward_p1"],
                 "total_reward_p2": ep_data["total_reward_p2"],
@@ -700,17 +966,18 @@ def record_worker(
             sample = {
                 "__key__": f"ep_{ep_id}",
                 "video_p1.mp4": ep_data["video_p1"],
-                "video_p2.mp4": ep_data["video_p2"],
                 "actions_p1.npy": _npy_bytes(ep_data["actions_p1"]),
-                "actions_p2.npy": _npy_bytes(ep_data["actions_p2"]),
                 "rewards_p1.npy": _npy_bytes(ep_data["rewards_p1"]),
-                "rewards_p2.npy": _npy_bytes(ep_data["rewards_p2"]),
+                "demo_p1.lmp": ep_data["demo_p1"],
                 "meta.json": json.dumps(meta).encode(),
             }
-            if "audio_p1" in ep_data:
-                sample["audio_p1.npy"] = _npy_bytes(ep_data["audio_p1"])
-            if "audio_p2" in ep_data:
-                sample["audio_p2.npy"] = _npy_bytes(ep_data["audio_p2"])
+            if ep_data["video_p2"]:
+                sample["video_p2.mp4"] = ep_data["video_p2"]
+            if ep_data["actions_p2"].size > 0:
+                sample["actions_p2.npy"] = _npy_bytes(ep_data["actions_p2"])
+                sample["rewards_p2.npy"] = _npy_bytes(ep_data["rewards_p2"])
+            if ep_data.get("demo_p2"):
+                sample["demo_p2.lmp"] = ep_data["demo_p2"]
 
             writer.write(sample)
 
@@ -739,7 +1006,7 @@ def record_worker(
                         "tics_per_sec": tics_per_sec,
                         "scenario": scenario_name,
                         "n_bots": ep_data["n_bots"],
-                        "video_mb": (len(ep_data["video_p1"]) + len(ep_data["video_p2"])) / 1e6,
+                        "video_mb": len(ep_data["video_p1"]) / 1e6,
                     })
                 except Exception:
                     pass
@@ -752,19 +1019,20 @@ def record_worker(
 # --- Main ---
 
 def main():
-    parser = argparse.ArgumentParser(description="Record multiplayer Doom games as WebDataset")
+    parser = argparse.ArgumentParser(description="Record Doom games as WebDataset (demo-based)")
     parser.add_argument("--experiment", default="00_bots_128_fs2_narrow_see_0",
                         help="Experiment name(s), comma-separated for variety")
     parser.add_argument("--train-dir", default="./sf_train_dir", help="SF train directory")
     parser.add_argument("--total-hours", type=float, default=100.0, help="Target gameplay hours")
-    parser.add_argument("--num-workers", type=int, default=8, help="Parallel game instances")
+    parser.add_argument("--num-workers", type=int, default=4, help="Parallel game instances")
     parser.add_argument("--output", default="datasets/mp_recordings", help="Output directory")
     parser.add_argument("--shard-size", type=int, default=512, help="Max shard size in MB")
     parser.add_argument("--checkpoint-temp", type=float, default=0.5,
                         help="Softmax temperature for checkpoint sampling")
-    parser.add_argument("--device", default="cuda", help="Torch device")
-    parser.add_argument("--enable-audio", type=bool, default=True, help="Enable audio capture")
-    parser.add_argument("--wandb-project", default="doom-deathmatch", help="wandb project (empty to disable)")
+    parser.add_argument("--device", default="cpu", help="Torch device")
+    parser.add_argument("--mode", choices=["bots", "pvp"], default="bots",
+                        help="Game mode: bots (1 player + bots) or pvp (2 AI players)")
+    parser.add_argument("--wandb-project", default="", help="wandb project (empty to disable)")
     args = parser.parse_args()
 
     experiments = [e.strip() for e in args.experiment.split(",")]
@@ -774,12 +1042,11 @@ def main():
     total_secs = args.total_hours * 3600.0
     secs_per_worker = total_secs / args.num_workers
 
-    print(f"[doom-record] Target: {args.total_hours:.1f}h, {args.num_workers} workers")
+    print(f"[doom-record] Target: {args.total_hours:.1f}h, {args.num_workers} workers, mode={args.mode}")
     print(f"  Experiments: {experiments}")
     print(f"  Output: {output_dir}")
     print(f"  Device: {args.device}")
-    print(f"  Checkpoint temperature: {args.checkpoint_temp}")
-    print(f"  Shard size: {args.shard_size} MB")
+    print(f"  Play: 160x120 | Video: 640x480 | Demo-based recording")
 
     ctx = mp.get_context("spawn")
     with mp.Manager() as manager:
@@ -793,7 +1060,7 @@ def main():
                 args=(
                     wid, experiments, args.train_dir,
                     args.checkpoint_temp, args.device,
-                    args.enable_audio, output_dir,
+                    args.mode, output_dir,
                     args.shard_size, secs_per_worker,
                     progress_queue,
                     args.wandb_project if args.wandb_project else None,
