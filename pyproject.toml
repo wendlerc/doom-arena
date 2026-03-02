@@ -14,6 +14,7 @@ dependencies = [
     "huggingface-hub",
     "numpy",
     "torch",
+    "webdataset",
 ]
 
 [tool.hatch.metadata]
@@ -29,3 +30,4 @@ doom-eval = "doom_arena.evaluate:main"
 doom-monitor = "doom_arena.monitor:main"
 doom-play = "doom_arena.play:main"
 doom-download = "doom_arena.download_models:main"
+doom-record = "doom_arena.record:main"

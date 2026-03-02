@@ -1,5 +1,6 @@
 sf_train_dir/
 results/
+datasets/
 wandb/
 .venv/
 __pycache__/
