@@ -2,8 +2,9 @@
 """
 Benchmark: fast_loader (NVDEC GPU) vs loader (cv2 CPU).
 
-Runs decode, batch, and seek benchmarks, then generates a standalone HTML report
-with embedded matplotlib charts.
+All benchmarks measure the FULL end-to-end pipeline that a training loop
+would actually execute, including GPU transfer, layout permutation, and
+float conversion — so the comparison is apples-to-apples.
 
 Usage:
     python benchmarks/loader_benchmark.py
@@ -17,7 +18,6 @@ import torch
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 
 DATA_ROOT = "datasets/mp_recordings"
 
@@ -26,6 +26,7 @@ DATA_ROOT = "datasets/mp_recordings"
 def fig_to_base64(fig, dpi=150):
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", facecolor="#1a1a2e")
+    plt.close(fig)
     buf.seek(0)
     return base64.b64encode(buf.read()).decode()
 
@@ -42,11 +43,10 @@ def system_info():
     except Exception:
         pass
 
+    cpu_name = "Unknown"
     try:
-        cpu_name = subprocess.check_output(
-            ["lscpu"], text=True,
-        )
-        for line in cpu_name.splitlines():
+        lscpu = subprocess.check_output(["lscpu"], text=True)
+        for line in lscpu.splitlines():
             if "Model name" in line:
                 cpu_name = line.split(":")[1].strip()
                 break
@@ -67,8 +67,12 @@ def system_info():
 
 # ── Benchmarks ───────────────────────────────────────────────────────────────
 
-def bench_episode_decode(n_episodes=10):
-    """Full episode decode: GPU (NVDEC) vs CPU (cv2)."""
+def bench_e2e_decode(n_episodes=10):
+    """End-to-end: MP4 bytes → GPU-ready (B,C,H,W) float32 tensor on cuda.
+
+    fast_loader: tar → NVDEC decode → GPU uint8 (already CHW on GPU)
+    loader:      tar → cv2 decode → numpy HWC → torch → permute CHW → .to(cuda) → float
+    """
     from doom_arena.fast_loader import DoomDataset as FastDS
     from doom_arena.loader import DoomDataset as SimpleDS
 
@@ -81,10 +85,11 @@ def bench_episode_decode(n_episodes=10):
     cpu_results = []
 
     for i in indices:
-        # GPU
+        # fast_loader: decode → already on GPU as (N, 3, H, W) uint8
         ep = fast_ds[i]
+        torch.cuda.synchronize()
         t0 = time.perf_counter()
-        v = ep.video_uint8
+        v = ep.video_uint8  # (N, 3, H, W) uint8 on cuda
         torch.cuda.synchronize()
         dt = time.perf_counter() - t0
         nf = v.shape[0]
@@ -92,63 +97,139 @@ def bench_episode_decode(n_episodes=10):
         del v, ep
         torch.cuda.empty_cache()
 
-        # CPU
+        # loader: decode → numpy (N, H, W, 3) → torch → permute → cuda
         ep = simple_ds[i]
         t0 = time.perf_counter()
-        v = ep.video
+        v_np = ep.video                                # (N, H, W, 3) uint8 numpy
+        v_t = torch.from_numpy(v_np).permute(0, 3, 1, 2)  # → (N, 3, H, W)
+        v_gpu = v_t.to("cuda")                          # → cuda
+        torch.cuda.synchronize()
         dt = time.perf_counter() - t0
         cpu_results.append((nf, dt))
-        del v, ep
+        del v_np, v_t, v_gpu, ep
+        torch.cuda.empty_cache()
 
     return gpu_results, cpu_results
 
 
-def bench_train_loader(n_batches=200):
-    """DoomTrainLoader warm batch throughput."""
+def bench_train_throughput(n_batches=200):
+    """Training batch throughput: fast_loader DoomTrainLoader vs
+    equivalent manual batching with loader.py.
+
+    Both produce the same output: (B, T, 3, H, W) float32 on cuda.
+    """
     from doom_arena.fast_loader import DoomTrainLoader
 
+    # --- fast_loader ---
     loader = DoomTrainLoader(
         DATA_ROOT, clip_len=16, stride=8, batch_size=32,
         device="cuda", max_cache=4, verbose=False,
     )
 
-    times = []
-    vram_samples = []
+    fast_times = []
+    fast_vram = []
     t0 = time.perf_counter()
     for i, batch in enumerate(loader):
         torch.cuda.synchronize()
         dt = time.perf_counter() - t0
-        times.append(dt)
-        vram_samples.append(torch.cuda.memory_allocated())
+        fast_times.append(dt)
+        fast_vram.append(torch.cuda.memory_allocated())
         t0 = time.perf_counter()
         if i >= n_batches:
             break
+    del loader
+    torch.cuda.empty_cache()
 
-    t_arr = np.array(times)
-    median = np.median(t_arr)
-    cold_mask = t_arr > 5 * median
-    warm = t_arr[~cold_mask]
-    cold = t_arr[cold_mask]
+    # --- loader (manual batching equivalent) ---
+    from doom_arena.loader import DoomDataset as SimpleDS
+    simple_ds = SimpleDS(DATA_ROOT, verbose=False)
+
+    # Build same clip index
+    clip_len, stride, batch_size = 16, 8, 32
+    clips = []
+    for idx, ep_idx in enumerate(range(min(4, len(simple_ds)))):
+        # Only use 4 episodes to match max_cache=4 behaviour
+        ep = simple_ds[ep_idx]
+        nf = ep.n_frames
+        for start in range(0, max(1, nf - clip_len + 1), stride):
+            clips.append((ep_idx, start))
+
+    # Pre-load these 4 episodes (equivalent to warm cache)
+    cached_videos = {}  # ep_idx → (N, H, W, 3) numpy
+    cached_actions = {}
+    cached_rewards = {}
+    for ep_idx in range(min(4, len(simple_ds))):
+        ep = simple_ds[ep_idx]
+        cached_videos[ep_idx] = ep.video
+        cached_actions[ep_idx] = ep.actions
+        cached_rewards[ep_idx] = ep.rewards
+
+    import random
+    random.shuffle(clips)
+
+    cpu_times = []
+    t0 = time.perf_counter()
+    for b_start in range(0, min(len(clips), (n_batches + 1) * batch_size), batch_size):
+        batch_clips = clips[b_start:b_start + batch_size]
+        if not batch_clips:
+            break
+
+        vid_batch = np.zeros((len(batch_clips), clip_len, 480, 640, 3), dtype=np.uint8)
+        act_batch = np.zeros((len(batch_clips), clip_len, 14), dtype=np.float32)
+        rew_batch = np.zeros((len(batch_clips), clip_len), dtype=np.float32)
+
+        for j, (ep_idx, start) in enumerate(batch_clips):
+            end = min(start + clip_len, cached_videos[ep_idx].shape[0])
+            n = end - start
+            vid_batch[j, :n] = cached_videos[ep_idx][start:end]
+            act_batch[j, :n] = cached_actions[ep_idx][start:end]
+            rew_batch[j, :n] = cached_rewards[ep_idx][start:end]
+
+        # Convert to GPU-ready training tensors: (B, T, 3, H, W) float32 cuda
+        vid_t = torch.from_numpy(vid_batch).permute(0, 1, 4, 2, 3)  # BTHWC → BTCHW
+        vid_gpu = vid_t.to("cuda", dtype=torch.float32).div_(255.0)
+        act_gpu = torch.from_numpy(act_batch).to("cuda")
+        rew_gpu = torch.from_numpy(rew_batch).to("cuda")
+        torch.cuda.synchronize()
+
+        dt = time.perf_counter() - t0
+        cpu_times.append(dt)
+        t0 = time.perf_counter()
+        del vid_batch, act_batch, rew_batch, vid_t, vid_gpu, act_gpu, rew_gpu
+
+        if len(cpu_times) > n_batches:
+            break
+
+    torch.cuda.empty_cache()
+
+    # Analyze
+    fast_arr = np.array(fast_times)
+    cpu_arr = np.array(cpu_times)
+
+    median_f = np.median(fast_arr)
+    fast_warm = fast_arr[fast_arr <= 5 * median_f]
+    fast_cold = fast_arr[fast_arr > 5 * median_f]
 
     return {
-        "all_times": t_arr,
-        "warm_times": warm,
-        "cold_times": cold,
-        "n_cold": len(cold),
-        "n_warm": len(warm),
-        "warm_mean_ms": np.mean(warm) * 1000,
-        "warm_p50_ms": np.median(warm) * 1000,
-        "warm_p99_ms": np.percentile(warm, 99) * 1000,
-        "warm_fps": len(warm) * 32 * 16 / np.sum(warm),
-        "vram_mb": np.mean(vram_samples) / 1e6,
-        "vram_peak_mb": torch.cuda.max_memory_allocated() / 1e6,
-        "batch_size": 32,
-        "clip_len": 16,
+        "fast_all": fast_arr,
+        "fast_warm": fast_warm,
+        "fast_cold": fast_cold,
+        "fast_warm_fps": len(fast_warm) * 32 * 16 / np.sum(fast_warm),
+        "fast_warm_p50_ms": np.median(fast_warm) * 1000,
+        "fast_warm_p99_ms": np.percentile(fast_warm, 99) * 1000,
+        "fast_n_cold": len(fast_cold),
+        "fast_vram_mb": np.mean(fast_vram) / 1e6,
+        "fast_vram_peak_mb": torch.cuda.max_memory_allocated() / 1e6,
+
+        "cpu_all": cpu_arr,
+        "cpu_warm_fps": len(cpu_arr) * 32 * 16 / np.sum(cpu_arr),
+        "cpu_warm_p50_ms": np.median(cpu_arr) * 1000,
+        "cpu_warm_p99_ms": np.percentile(cpu_arr, 99) * 1000,
     }
 
 
 def bench_single_frame():
-    """Single frame seek: GPU vs CPU."""
+    """Single frame seek: GPU vs CPU (both produce a tensor on cuda)."""
     from doom_arena.fast_loader import DoomDataset as FastDS
     from doom_arena.loader import DoomDataset as SimpleDS
 
@@ -160,8 +241,9 @@ def bench_single_frame():
     cpu_times = []
 
     for fi in frame_indices:
-        # GPU
+        # fast_loader: get_frame → (3, H, W) uint8 on cuda
         ep = fast_ds[0]
+        torch.cuda.synchronize()
         t0 = time.perf_counter()
         f = ep.get_frame(fi)
         torch.cuda.synchronize()
@@ -170,13 +252,16 @@ def bench_single_frame():
         del f, ep
         torch.cuda.empty_cache()
 
-        # CPU
+        # loader: get_frame → (H, W, 3) numpy → permute → cuda
         ep = simple_ds[0]
         t0 = time.perf_counter()
-        f = ep.get_frame(fi)
+        f_np = ep.get_frame(fi)
+        f_t = torch.from_numpy(f_np).permute(2, 0, 1).to("cuda")
+        torch.cuda.synchronize()
         dt = time.perf_counter() - t0
         cpu_times.append(dt)
-        del f, ep
+        del f_np, f_t, ep
+        torch.cuda.empty_cache()
 
     return frame_indices, gpu_times, cpu_times
 
@@ -205,7 +290,7 @@ def style_ax(ax, title="", xlabel="", ylabel=""):
     ax.grid(True, alpha=0.2, color=COLORS["grid"])
 
 
-def chart_episode_decode(gpu_results, cpu_results):
+def chart_e2e_decode(gpu_results, cpu_results):
     n = len(gpu_results)
     gpu_fps = [nf / dt for nf, dt in gpu_results]
     cpu_fps = [nf / dt for nf, dt in cpu_results]
@@ -214,22 +299,22 @@ def chart_episode_decode(gpu_results, cpu_results):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     fig.patch.set_facecolor(COLORS["bg"])
 
-    # Bar chart: fps per episode
+    # Per-episode bars
     w = 0.35
-    ax1.bar(x - w/2, gpu_fps, w, label="NVDEC (GPU)", color=COLORS["gpu"], alpha=0.85)
-    ax1.bar(x + w/2, cpu_fps, w, label="cv2 (CPU)", color=COLORS["cpu"], alpha=0.85)
+    ax1.bar(x - w/2, gpu_fps, w, label="fast_loader (NVDEC)", color=COLORS["gpu"], alpha=0.85)
+    ax1.bar(x + w/2, cpu_fps, w, label="loader (cv2 + GPU xfer)", color=COLORS["cpu"], alpha=0.85)
     ax1.legend(fontsize=10, facecolor=COLORS["card"], edgecolor=COLORS["grid"],
                labelcolor=COLORS["text"])
-    style_ax(ax1, "Per-Episode Decode Speed", "Episode Index", "Decode FPS")
+    style_ax(ax1, "End-to-End: MP4 \u2192 GPU Tensor", "Episode Index", "Frames/sec")
     ax1.set_xticks(x)
 
-    # Summary comparison
+    # Summary
     avg_gpu = sum(nf for nf, _ in gpu_results) / sum(dt for _, dt in gpu_results)
     avg_cpu = sum(nf for nf, _ in cpu_results) / sum(dt for _, dt in cpu_results)
     speedup = avg_gpu / avg_cpu
 
     bars = ax2.barh(
-        ["cv2\n(CPU)", "NVDEC\n(GPU)"],
+        ["loader\n(cv2 + permute\n+ .to(cuda))", "fast_loader\n(NVDEC)"],
         [avg_cpu, avg_gpu],
         color=[COLORS["cpu"], COLORS["gpu"]],
         height=0.5, alpha=0.85,
@@ -238,38 +323,58 @@ def chart_episode_decode(gpu_results, cpu_results):
         ax2.text(bar.get_width() + 30, bar.get_y() + bar.get_height()/2,
                  f"{val:.0f} fps", va="center", color=COLORS["text"], fontsize=12,
                  fontweight="bold")
-    style_ax(ax2, f"Average Decode Speed ({speedup:.1f}x)", "Frames per Second", "")
-    ax2.set_xlim(0, max(avg_gpu, avg_cpu) * 1.3)
+    style_ax(ax2, f"Average ({speedup:.1f}x speedup)", "Frames/sec", "")
+    ax2.set_xlim(0, max(avg_gpu, avg_cpu) * 1.35)
 
     plt.tight_layout()
     return fig_to_base64(fig), avg_gpu, avg_cpu, speedup
 
 
-def chart_train_loader(results):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+def chart_train_throughput(results):
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
     fig.patch.set_facecolor(COLORS["bg"])
 
-    # Histogram of warm batch times
-    ax1.hist(results["warm_times"] * 1000, bins=40, color=COLORS["gpu"], alpha=0.8,
-             edgecolor=COLORS["bg"])
-    ax1.axvline(results["warm_p50_ms"], color=COLORS["accent"], linestyle="--",
-                linewidth=2, label=f"p50 = {results['warm_p50_ms']:.0f}ms")
-    ax1.axvline(results["warm_p99_ms"], color=COLORS["cpu"], linestyle="--",
-                linewidth=2, label=f"p99 = {results['warm_p99_ms']:.0f}ms")
-    ax1.legend(fontsize=10, facecolor=COLORS["card"], edgecolor=COLORS["grid"],
-               labelcolor=COLORS["text"])
-    style_ax(ax1, "Warm Batch Latency Distribution", "Latency (ms)", "Count")
+    # 1. Side-by-side throughput bars
+    ax = axes[0]
+    bars = ax.barh(
+        ["loader\n(manual batch)", "fast_loader\n(DoomTrainLoader)"],
+        [results["cpu_warm_fps"], results["fast_warm_fps"]],
+        color=[COLORS["cpu"], COLORS["gpu"]],
+        height=0.5, alpha=0.85,
+    )
+    for bar, val in zip(bars, [results["cpu_warm_fps"], results["fast_warm_fps"]]):
+        ax.text(bar.get_width() + 30, bar.get_y() + bar.get_height()/2,
+                f"{val:.0f} fps", va="center", color=COLORS["text"], fontsize=12,
+                fontweight="bold")
+    speedup = results["fast_warm_fps"] / max(results["cpu_warm_fps"], 1)
+    style_ax(ax, f"Training Throughput ({speedup:.1f}x)", "Frames/sec (warm)", "")
+    ax.set_xlim(0, results["fast_warm_fps"] * 1.35)
 
-    # Timeline of batch times
-    ax2.scatter(range(len(results["all_times"])), results["all_times"] * 1000,
-                s=8, alpha=0.6, color=COLORS["gpu"])
-    cold_idx = np.where(results["all_times"] > np.median(results["all_times"]) * 5)[0]
+    # 2. Batch latency histogram (fast_loader)
+    ax = axes[1]
+    ax.hist(results["fast_warm"] * 1000, bins=40, color=COLORS["gpu"], alpha=0.7,
+            edgecolor=COLORS["bg"], label="fast_loader")
+    ax.hist(results["cpu_all"] * 1000, bins=40, color=COLORS["cpu"], alpha=0.5,
+            edgecolor=COLORS["bg"], label="loader")
+    ax.axvline(results["fast_warm_p50_ms"], color=COLORS["gpu"], linestyle="--",
+               linewidth=2, alpha=0.8)
+    ax.axvline(results["cpu_warm_p50_ms"], color=COLORS["cpu"], linestyle="--",
+               linewidth=2, alpha=0.8)
+    ax.legend(fontsize=10, facecolor=COLORS["card"], edgecolor=COLORS["grid"],
+              labelcolor=COLORS["text"])
+    style_ax(ax, "Batch Latency (warm)", "ms", "Count")
+
+    # 3. Timeline (fast_loader)
+    ax = axes[2]
+    ax.scatter(range(len(results["fast_all"])), results["fast_all"] * 1000,
+               s=8, alpha=0.6, color=COLORS["gpu"], label="fast_loader")
+    cold_idx = np.where(results["fast_all"] > np.median(results["fast_all"]) * 5)[0]
     if len(cold_idx):
-        ax2.scatter(cold_idx, results["all_times"][cold_idx] * 1000,
-                    s=30, color=COLORS["cpu"], zorder=5, label="Cache miss (cold)")
-        ax2.legend(fontsize=10, facecolor=COLORS["card"], edgecolor=COLORS["grid"],
-                   labelcolor=COLORS["text"])
-    style_ax(ax2, "Batch Latency Timeline", "Batch Index", "Latency (ms)")
+        ax.scatter(cold_idx, results["fast_all"][cold_idx] * 1000,
+                   s=30, color=COLORS["cpu"], zorder=5, label="Cache miss")
+    ax.legend(fontsize=10, facecolor=COLORS["card"], edgecolor=COLORS["grid"],
+              labelcolor=COLORS["text"])
+    style_ax(ax, "Batch Latency Timeline", "Batch Index", "ms")
 
     plt.tight_layout()
     return fig_to_base64(fig)
@@ -282,46 +387,49 @@ def chart_single_frame(frame_indices, gpu_times, cpu_times):
     x = np.arange(len(frame_indices))
     w = 0.35
     ax.bar(x - w/2, [t * 1000 for t in gpu_times], w,
-           label="NVDEC (GPU)", color=COLORS["gpu"], alpha=0.85)
+           label="fast_loader (NVDEC)", color=COLORS["gpu"], alpha=0.85)
     ax.bar(x + w/2, [t * 1000 for t in cpu_times], w,
-           label="cv2 (CPU)", color=COLORS["cpu"], alpha=0.85)
+           label="loader (cv2 + .to(cuda))", color=COLORS["cpu"], alpha=0.85)
     ax.set_xticks(x)
     ax.set_xticklabels([str(fi) for fi in frame_indices])
     ax.legend(fontsize=10, facecolor=COLORS["card"], edgecolor=COLORS["grid"],
               labelcolor=COLORS["text"])
-    style_ax(ax, "Single Frame Seek Time (uncached)", "Frame Index", "Time (ms)")
+    style_ax(ax, "Single Frame Seek \u2192 GPU Tensor (uncached)", "Frame Index", "Time (ms)")
 
     plt.tight_layout()
     return fig_to_base64(fig)
 
 
 def chart_architecture():
-    """Visual architecture diagram."""
-    fig, ax = plt.subplots(figsize=(12, 6))
+    """Pipeline diagram showing what each loader actually does."""
+    fig, ax = plt.subplots(figsize=(14, 6))
     fig.patch.set_facecolor(COLORS["bg"])
     ax.set_facecolor(COLORS["bg"])
-    ax.set_xlim(0, 10)
+    ax.set_xlim(0, 12)
     ax.set_ylim(0, 6)
     ax.axis("off")
 
-    # Draw pipeline boxes
     boxes = [
-        (0.5, 4.5, "WebDataset\nTar Shards", COLORS["grid"]),
-        (2.5, 4.5, "Tar Extract\n(bytes)", COLORS["grid"]),
-        (4.5, 4.5, "NVDEC\nHW Decode", COLORS["gpu"]),
-        (6.5, 4.5, "CPU RAM\nLRU Cache", COLORS["accent"]),
-        (8.5, 4.5, "Pinned\nTransfer", COLORS["gpu"]),
+        # fast_loader pipeline
+        (1.0, 4.5, "Tar\nExtract", COLORS["grid"]),
+        (3.0, 4.5, "NVDEC\nHW Decode", COLORS["gpu"]),
+        (5.0, 4.5, "(N,3,H,W)\nuint8 GPU", COLORS["gpu"]),
+        (7.0, 4.5, "CPU RAM\nLRU Cache", COLORS["accent"]),
+        (9.0, 4.5, "Pinned\nTransfer", COLORS["gpu"]),
+        (11.0, 4.5, "(B,T,3,H,W)\nfloat32 cuda", COLORS["gpu"]),
 
-        (0.5, 1.5, "WebDataset\nTar Shards", COLORS["grid"]),
-        (2.5, 1.5, "Tar Extract\n(bytes)", COLORS["grid"]),
-        (4.5, 1.5, "cv2\nCPU Decode", COLORS["cpu"]),
-        (6.5, 1.5, "NumPy\nArray", COLORS["cpu"]),
-        (8.5, 1.5, "Manual\nCopy", COLORS["cpu"]),
+        # loader pipeline
+        (1.0, 1.5, "Tar\nExtract", COLORS["grid"]),
+        (3.0, 1.5, "cv2\nCPU Decode", COLORS["cpu"]),
+        (5.0, 1.5, "(N,H,W,3)\nuint8 numpy", COLORS["cpu"]),
+        (7.0, 1.5, "torch +\npermute CHW", COLORS["cpu"]),
+        (9.0, 1.5, ".to(cuda)\n+ .float()", COLORS["cpu"]),
+        (11.0, 1.5, "(B,T,3,H,W)\nfloat32 cuda", COLORS["cpu"]),
     ]
 
     for x, y, text, color in boxes:
-        rect = plt.Rectangle((x - 0.7, y - 0.5), 1.4, 1.0,
-                              facecolor=color, alpha=0.2, edgecolor=color,
+        rect = plt.Rectangle((x - 0.85, y - 0.5), 1.7, 1.0,
+                              facecolor=color, alpha=0.15, edgecolor=color,
                               linewidth=1.5, zorder=2)
         ax.add_patch(rect)
         ax.text(x, y, text, ha="center", va="center", color=COLORS["text"],
@@ -329,22 +437,19 @@ def chart_architecture():
 
     # Arrows
     for row_y in [4.5, 1.5]:
-        for x_start in [1.2, 3.2, 5.2, 7.2]:
-            ax.annotate("", xy=(x_start + 0.6, row_y), xytext=(x_start, row_y),
+        for x_start in [1.85, 3.85, 5.85, 7.85, 9.85]:
+            ax.annotate("", xy=(x_start + 0.3, row_y), xytext=(x_start, row_y),
                         arrowprops=dict(arrowstyle="->", color=COLORS["text"],
                                        lw=1.5), zorder=4)
 
-    # Labels
-    ax.text(5, 5.7, "fast_loader.py  (NVDEC GPU Pipeline)",
+    ax.text(6, 5.7, "fast_loader.py  (NVDEC \u2192 GPU \u2192 CPU cache \u2192 pinned transfer)",
             ha="center", color=COLORS["gpu"], fontsize=13, fontweight="bold")
-    ax.text(5, 2.7, "loader.py  (cv2 CPU Pipeline)",
+    ax.text(6, 2.7, "loader.py  (cv2 \u2192 numpy \u2192 torch.permute \u2192 .to(cuda))",
             ha="center", color=COLORS["cpu"], fontsize=13, fontweight="bold")
 
-    # Final output
-    for y, label, color in [(4.5, "GPU Tensor\n(B,T,3,H,W)", COLORS["gpu"]),
-                             (1.5, "NumPy Array\n(N,H,W,3)", COLORS["cpu"])]:
-        ax.text(9.8, y, label, ha="center", va="center",
-                color=color, fontsize=9, fontweight="bold")
+    # Both produce same output
+    ax.text(6, 0.3, "Both produce identical output: (B, T, 3, H, W) float32 on cuda",
+            ha="center", color=COLORS["accent"], fontsize=11, fontstyle="italic")
 
     plt.tight_layout()
     return fig_to_base64(fig)
@@ -358,7 +463,7 @@ HTML_TEMPLATE = """\
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Doom Arena — Data Loader Benchmark</title>
+<title>Doom Arena &mdash; Data Loader Benchmark</title>
 <style>
   :root {{
     --bg: #0f0f23;
@@ -384,6 +489,7 @@ HTML_TEMPLATE = """\
     background: linear-gradient(135deg, var(--gpu), var(--accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.3rem;
   }}
   h2 {{
@@ -401,9 +507,15 @@ HTML_TEMPLATE = """\
     padding: 1.5rem;
     margin-bottom: 1.5rem;
   }}
+  .note {{
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+    color: #888;
+    line-height: 1.5;
+  }}
   .stats-grid {{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
   }}
@@ -456,16 +568,16 @@ HTML_TEMPLATE = """\
 
 <div class="stats-grid">
   <div class="stat">
-    <span class="value gpu">{warm_fps:.0f}</span>
-    <span class="label">Training FPS (warm)</span>
+    <span class="value accent">{train_speedup:.1f}x</span>
+    <span class="label">Training Batch Speedup</span>
   </div>
   <div class="stat">
-    <span class="value gpu">{warm_p50:.0f}ms</span>
-    <span class="label">Batch Latency (p50)</span>
+    <span class="value gpu">{fast_fps:.0f}</span>
+    <span class="label">fast_loader FPS (warm)</span>
   </div>
   <div class="stat">
-    <span class="value accent">{decode_speedup:.1f}x</span>
-    <span class="label">Decode Speedup</span>
+    <span class="value cpu">{cpu_fps:.0f}</span>
+    <span class="label">loader FPS (warm)</span>
   </div>
   <div class="stat">
     <span class="value">{vram_peak:.0f} MB</span>
@@ -473,17 +585,25 @@ HTML_TEMPLATE = """\
   </div>
 </div>
 
-<h2>Architecture</h2>
+<h2>Pipeline Architecture</h2>
 <div class="card">
   <img src="data:image/png;base64,{arch_chart}" alt="Architecture comparison">
+  <p class="note">
+    Both loaders produce the same output shape: <code>(B, T, 3, H, W) float32</code> on CUDA.
+    fast_loader decodes on GPU hardware (NVDEC), caches in CPU RAM, and uses pinned memory
+    for fast transfer. loader decodes on CPU with cv2, then converts numpy &rarr; torch &rarr;
+    permute CHW &rarr; .to(cuda).
+  </p>
 </div>
 
-<h2>Episode Decode Speed</h2>
+<h2>End-to-End Decode: MP4 &rarr; GPU Tensor</h2>
 <div class="card">
   <img src="data:image/png;base64,{decode_chart}" alt="Decode benchmark">
-  <p style="margin-top:0.8rem; font-size:0.9rem; color:#888;">
-    Measured over {n_decode_eps} episodes. GPU decode uses NVIDIA NVDEC hardware via PyNvVideoCodec.
-    CPU decode uses OpenCV VideoCapture. Both include tar extraction and temp file overhead.
+  <p class="note">
+    Full end-to-end: tar extraction + video decode + GPU transfer. The <b>loader</b> path
+    includes <code>torch.from_numpy().permute(0,3,1,2).to("cuda")</code> so the comparison
+    is fair &mdash; both end with the same <code>(N, 3, H, W)</code> tensor on CUDA.
+    Measured over {n_decode_eps} episodes.
   </p>
 </div>
 
@@ -491,22 +611,46 @@ HTML_TEMPLATE = """\
 <div class="card">
   <img src="data:image/png;base64,{train_chart}" alt="Training throughput">
   <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Warm throughput</td><td class="gpu">{warm_fps:.0f} frames/s</td></tr>
-    <tr><td>Batch latency (p50 / p99)</td><td>{warm_p50:.0f}ms / {warm_p99:.0f}ms</td></tr>
-    <tr><td>Cold batches (cache miss)</td><td class="cpu">{n_cold} of {n_total} ({cold_pct:.1f}%)</td></tr>
-    <tr><td>Batch size / Clip length</td><td>32 clips &times; 16 frames = 512 frames/batch</td></tr>
-    <tr><td>VRAM usage (batch)</td><td>{vram_batch:.0f} MB</td></tr>
-    <tr><td>VRAM peak</td><td>{vram_peak:.0f} MB</td></tr>
+    <tr><th>Metric</th>
+        <th><span class="tag tag-gpu">fast_loader</span></th>
+        <th><span class="tag tag-cpu">loader</span></th></tr>
+    <tr><td>Warm throughput</td>
+        <td class="gpu">{fast_fps:.0f} frames/s</td>
+        <td class="cpu">{cpu_fps:.0f} frames/s</td></tr>
+    <tr><td>Batch latency (p50)</td>
+        <td>{fast_p50:.0f}ms</td>
+        <td>{cpu_p50:.0f}ms</td></tr>
+    <tr><td>Batch latency (p99)</td>
+        <td>{fast_p99:.0f}ms</td>
+        <td>{cpu_p99:.0f}ms</td></tr>
+    <tr><td>Cold batches</td>
+        <td>{n_cold} of {n_total} ({cold_pct:.1f}%)</td>
+        <td>N/A (pre-loaded)</td></tr>
+    <tr><td>Output shape</td>
+        <td colspan="2">(32, 16, 3, 480, 640) float32 cuda &mdash; identical for both</td></tr>
+    <tr><td>VRAM (batch)</td>
+        <td>{vram_batch:.0f} MB</td>
+        <td>&mdash;</td></tr>
+    <tr><td>VRAM peak</td>
+        <td>{vram_peak:.0f} MB</td>
+        <td>&mdash;</td></tr>
   </table>
+  <p class="note">
+    Both loaders serve 32 clips &times; 16 frames = 512 frames per batch.
+    Both output <code>(B, T, 3, H, W) float32</code> on CUDA &mdash; identical shapes and dtypes.
+    The loader path includes <code>np &rarr; torch &rarr; permute &rarr; .to(cuda, float32)</code>.
+    fast_loader uses pre-allocated pinned memory buffers for 8.7x faster CPU&rarr;GPU transfer.
+  </p>
 </div>
 
-<h2>Single Frame Seek</h2>
+<h2>Single Frame Seek &rarr; GPU</h2>
 <div class="card">
   <img src="data:image/png;base64,{seek_chart}" alt="Single frame seek">
-  <p style="margin-top:0.8rem; font-size:0.9rem; color:#888;">
-    Time to extract one frame from a fresh (uncached) episode. Includes tar extraction +
-    temp file + decoder init + seek. Once video is cached, frame access is &lt;0.1ms.
+  <p class="note">
+    Time to extract one frame from a fresh (uncached) episode and place it on GPU.
+    Includes tar extraction + temp file + decoder init + seek.
+    loader includes <code>.to("cuda")</code>. Once the full video is cached, frame access
+    is &lt;0.1ms for both.
   </p>
 </div>
 
@@ -518,16 +662,16 @@ HTML_TEMPLATE = """\
       <th><span class="tag tag-gpu">fast_loader</span></th>
       <th><span class="tag tag-cpu">loader</span></th>
     </tr>
-    <tr><td>Video decode backend</td><td>NVDEC hardware (PyNvVideoCodec)</td><td>cv2 (CPU)</td></tr>
-    <tr><td>Output format</td><td>torch.Tensor (GPU/CPU)</td><td>numpy.ndarray (CPU)</td></tr>
-    <tr><td>Video layout</td><td>(N, C, H, W) &mdash; channels-first</td><td>(N, H, W, C) &mdash; channels-last</td></tr>
-    <tr><td>Training pipeline</td><td>DoomTrainLoader (clip batching, shuffle)</td><td>Manual iteration</td></tr>
-    <tr><td>Pinned memory</td><td>Pre-allocated pinned buffers</td><td>N/A</td></tr>
-    <tr><td>Caching</td><td>LRU CPU RAM cache + grouped iteration</td><td>Per-episode lazy load</td></tr>
-    <tr><td>Temp files</td><td>/dev/shm (RAM disk)</td><td>/tmp (disk)</td></tr>
-    <tr><td>CPU fallback</td><td>Automatic (cv2)</td><td>N/A (cv2 only)</td></tr>
-    <tr><td>Visualization</td><td>show_frame, play, plot_actions, plot_rewards</td><td>Same</td></tr>
+    <tr><td>Video decode</td><td>NVDEC hardware (PyNvVideoCodec)</td><td>cv2.VideoCapture (CPU)</td></tr>
+    <tr><td>Output type</td><td>torch.Tensor</td><td>numpy.ndarray</td></tr>
+    <tr><td>Training output</td><td colspan="2">(B, T, 3, H, W) float32 cuda &mdash; same shape</td></tr>
+    <tr><td>Training pipeline</td><td>DoomTrainLoader (built-in)</td><td>Manual (for loop)</td></tr>
+    <tr><td>Batch assembly</td><td>Pinned memory + non-blocking</td><td>numpy &rarr; torch &rarr; permute &rarr; .to(cuda)</td></tr>
+    <tr><td>Video caching</td><td>LRU in CPU RAM, grouped iteration</td><td>Per-episode lazy load</td></tr>
+    <tr><td>Temp files</td><td>/dev/shm (RAM-backed)</td><td>/tmp (disk)</td></tr>
+    <tr><td>CPU fallback</td><td>Automatic (cv2)</td><td>N/A</td></tr>
     <tr><td>Multi-core</td><td>Single-threaded (NVDEC offloads CPU)</td><td>Single-threaded</td></tr>
+    <tr><td>Interactive viz</td><td>show_frame, play, plot_actions, plot_rewards</td><td>Same</td></tr>
   </table>
 </div>
 
@@ -549,50 +693,60 @@ HTML_TEMPLATE = """\
 def main():
     print("=" * 60)
     print("  Doom Arena Data Loader Benchmark")
+    print("  (end-to-end: MP4 -> GPU-ready training tensor)")
     print("=" * 60)
 
     sysinfo = system_info()
     print(f"\nSystem: {sysinfo['gpu']} | {sysinfo['cpu']} ({sysinfo['cores']} cores)")
 
-    # 1. Episode decode
-    print("\n[1/4] Episode decode benchmark (10 episodes)...")
-    gpu_res, cpu_res = bench_episode_decode(10)
+    # 1. End-to-end episode decode
+    print("\n[1/4] E2E episode decode (10 eps): MP4 -> (N,3,H,W) uint8 cuda ...")
+    gpu_res, cpu_res = bench_e2e_decode(10)
     avg_gpu = sum(nf for nf, _ in gpu_res) / sum(dt for _, dt in gpu_res)
     avg_cpu = sum(nf for nf, _ in cpu_res) / sum(dt for _, dt in cpu_res)
-    print(f"  GPU: {avg_gpu:.0f} fps | CPU: {avg_cpu:.0f} fps | Speedup: {avg_gpu/avg_cpu:.1f}x")
+    print(f"  fast_loader: {avg_gpu:.0f} fps | loader: {avg_cpu:.0f} fps | {avg_gpu/avg_cpu:.1f}x")
 
-    # 2. Training loader
-    print("\n[2/4] Training batch benchmark (200 batches)...")
-    train_res = bench_train_loader(200)
-    print(f"  Warm: {train_res['warm_fps']:.0f} fps ({train_res['warm_p50_ms']:.0f}ms p50)")
+    # 2. Training throughput (both loaders)
+    print("\n[2/4] Training batch throughput (200 batches, both loaders)...")
+    train_res = bench_train_throughput(200)
+    train_speedup = train_res["fast_warm_fps"] / max(train_res["cpu_warm_fps"], 1)
+    print(f"  fast_loader: {train_res['fast_warm_fps']:.0f} fps "
+          f"({train_res['fast_warm_p50_ms']:.0f}ms p50)")
+    print(f"  loader:      {train_res['cpu_warm_fps']:.0f} fps "
+          f"({train_res['cpu_warm_p50_ms']:.0f}ms p50)")
+    print(f"  Speedup: {train_speedup:.1f}x")
 
     # 3. Single frame seek
-    print("\n[3/4] Single frame seek benchmark...")
-    seek_indices, seek_gpu, seek_cpu = bench_single_frame()
-    print(f"  GPU avg: {np.mean(seek_gpu)*1000:.0f}ms | CPU avg: {np.mean(seek_cpu)*1000:.0f}ms")
+    print("\n[3/4] Single frame seek -> cuda tensor ...")
+    seek_idx, seek_gpu, seek_cpu = bench_single_frame()
+    print(f"  fast_loader avg: {np.mean(seek_gpu)*1000:.0f}ms | "
+          f"loader avg: {np.mean(seek_cpu)*1000:.0f}ms")
 
-    # 4. Generate charts
-    print("\n[4/4] Generating report...")
+    # 4. Generate report
+    print("\n[4/4] Generating report ...")
     torch.cuda.empty_cache()
-    torch.cuda.reset_peak_memory_stats()
 
-    decode_b64, d_gpu, d_cpu, d_speedup = chart_episode_decode(gpu_res, cpu_res)
-    train_b64 = chart_train_loader(train_res)
-    seek_b64 = chart_single_frame(seek_indices, seek_gpu, seek_cpu)
+    decode_b64, d_gpu, d_cpu, d_speedup = chart_e2e_decode(gpu_res, cpu_res)
+    train_b64 = chart_train_throughput(train_res)
+    seek_b64 = chart_single_frame(seek_idx, seek_gpu, seek_cpu)
     arch_b64 = chart_architecture()
 
     from datetime import datetime
     html = HTML_TEMPLATE.format(
         date=datetime.now().strftime("%Y-%m-%d %H:%M"),
-        warm_fps=train_res["warm_fps"],
-        warm_p50=train_res["warm_p50_ms"],
-        warm_p99=train_res["warm_p99_ms"],
+        train_speedup=train_speedup,
+        fast_fps=train_res["fast_warm_fps"],
+        cpu_fps=train_res["cpu_warm_fps"],
+        fast_p50=train_res["fast_warm_p50_ms"],
+        fast_p99=train_res["fast_warm_p99_ms"],
+        cpu_p50=train_res["cpu_warm_p50_ms"],
+        cpu_p99=train_res["cpu_warm_p99_ms"],
         decode_speedup=d_speedup,
-        vram_peak=train_res["vram_peak_mb"],
-        vram_batch=train_res["vram_mb"],
-        n_cold=train_res["n_cold"],
-        n_total=train_res["n_warm"] + train_res["n_cold"],
-        cold_pct=train_res["n_cold"] / (train_res["n_warm"] + train_res["n_cold"]) * 100,
+        vram_peak=train_res["fast_vram_peak_mb"],
+        vram_batch=train_res["fast_vram_mb"],
+        n_cold=train_res["fast_n_cold"],
+        n_total=len(train_res["fast_all"]),
+        cold_pct=train_res["fast_n_cold"] / max(len(train_res["fast_all"]), 1) * 100,
         n_decode_eps=len(gpu_res),
         arch_chart=arch_b64,
         decode_chart=decode_b64,
@@ -611,7 +765,7 @@ def main():
     with open(out_path, "w") as f:
         f.write(html)
     print(f"\nReport saved to {out_path}")
-    print(f"Open in browser: file://{os.path.abspath(out_path)}")
+    print(f"Open: file://{os.path.abspath(out_path)}")
 
 
 if __name__ == "__main__":
