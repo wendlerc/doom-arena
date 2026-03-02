@@ -44,7 +44,7 @@ REPLAY_RESOLUTION = (640, 480)
 SCENARIOS = {
     "dwango5_3min": {"wad": "dwango5.wad", "map": "map01", "bots": 4, "timelimit": 3.0, "weight": 0.40},
     "dwango5_5min": {"wad": "dwango5.wad", "map": "map01", "bots": 4, "timelimit": 5.0, "weight": 0.45},
-    "ssl2_duel": {"wad": "ssl2.wad", "map": "map01", "bots": 0, "timelimit": 3.0, "weight": 0.15},
+    "ssl2_duel": {"wad": "ssl2.wad", "map": "map01", "bots": 2, "timelimit": 3.0, "weight": 0.15},
 }
 
 # Buttons matching training (dwango5_dm_continuous_weap.cfg)
@@ -259,6 +259,28 @@ def get_action_spaces():
     return _ACTION_SPACES
 
 
+RANDOM_POLICY_PROB = 0.05  # 5% of episodes use fully random actions
+
+
+def sample_random_action() -> list:
+    """Sample a uniformly random action from the action space."""
+    import gymnasium as gym
+    from sample_factory.algo.utils.spaces.discretized import Discretized
+
+    spaces = get_action_spaces()
+    flat = []
+    for space in spaces:
+        act_val = np.random.randint(space.n) if hasattr(space, "n") else 0
+        if isinstance(space, Discretized):
+            flat.append(space.to_continuous(act_val))
+        elif isinstance(space, gym.spaces.Discrete):
+            one_hot = [0] * (space.n - 1)
+            if act_val > 0:
+                one_hot[act_val - 1] = 1
+            flat.extend(one_hot)
+    return flat
+
+
 def convert_action(actions: np.ndarray) -> list:
     """Convert model output (per sub-space indices) to binary button list for ViZDoom.
 
@@ -412,6 +434,7 @@ def _play_single_player(
     timelimit: float,
     num_bots: int,
     demo_path: str,
+    use_random_policy: bool = False,
 ) -> dict | None:
     """Play one episode at 160x120 with bots, recording a demo. Returns play data."""
     game = create_play_game(wad_path, doom_map, timelimit, num_bots=num_bots)
@@ -444,13 +467,16 @@ def _play_single_player(
             continue
 
         if tic % DECISION_INTERVAL == 0:
-            with torch.no_grad():
-                meas = extract_measurements(game)
-                obs = preprocess_for_model(state.screen_buffer, meas, device)
-                norm = actor_critic.normalize_obs(obs)
-                result = actor_critic(norm, rnn)
-                rnn = result["new_rnn_states"]
-                action = convert_action(result["actions"].cpu().numpy())
+            if use_random_policy:
+                action = sample_random_action()
+            else:
+                with torch.no_grad():
+                    meas = extract_measurements(game)
+                    obs = preprocess_for_model(state.screen_buffer, meas, device)
+                    norm = actor_critic.normalize_obs(obs)
+                    result = actor_critic(norm, rnn)
+                    rnn = result["new_rnn_states"]
+                    action = convert_action(result["actions"].cpu().numpy())
 
         all_actions.append(np.array(action, dtype=np.float32))
         game.make_action([float(a) for a in action])
@@ -493,6 +519,7 @@ def _play_multiplayer(
     doom_map: str,
     timelimit: float,
     port: int,
+    use_random_policy: bool = False,
 ) -> dict | None:
     """Play one 2-player episode at 160x120, recording frames and actions.
 
@@ -614,20 +641,24 @@ def _play_multiplayer(
         frames_p2.append(frame_p2)
 
         if tic % DECISION_INTERVAL == 0:
-            with torch.no_grad():
-                meas_p1 = extract_measurements(host_game)
-                obs_p1 = preprocess_for_model(state_p1.screen_buffer, meas_p1, device)
-                norm_p1 = actor_critic.normalize_obs(obs_p1)
-                res_p1 = actor_critic(norm_p1, rnn_p1)
-                rnn_p1 = res_p1["new_rnn_states"]
-                action_p1 = convert_action(res_p1["actions"].cpu().numpy())
+            if use_random_policy:
+                action_p1 = sample_random_action()
+                action_p2 = sample_random_action()
+            else:
+                with torch.no_grad():
+                    meas_p1 = extract_measurements(host_game)
+                    obs_p1 = preprocess_for_model(state_p1.screen_buffer, meas_p1, device)
+                    norm_p1 = actor_critic.normalize_obs(obs_p1)
+                    res_p1 = actor_critic(norm_p1, rnn_p1)
+                    rnn_p1 = res_p1["new_rnn_states"]
+                    action_p1 = convert_action(res_p1["actions"].cpu().numpy())
 
-                meas_p2 = extract_measurements(join_game)
-                obs_p2 = preprocess_for_model(state_p2.screen_buffer, meas_p2, device)
-                norm_p2 = actor_critic.normalize_obs(obs_p2)
-                res_p2 = actor_critic(norm_p2, rnn_p2)
-                rnn_p2 = res_p2["new_rnn_states"]
-                action_p2 = convert_action(res_p2["actions"].cpu().numpy())
+                    meas_p2 = extract_measurements(join_game)
+                    obs_p2 = preprocess_for_model(state_p2.screen_buffer, meas_p2, device)
+                    norm_p2 = actor_critic.normalize_obs(obs_p2)
+                    res_p2 = actor_critic(norm_p2, rnn_p2)
+                    rnn_p2 = res_p2["new_rnn_states"]
+                    action_p2 = convert_action(res_p2["actions"].cpu().numpy())
 
         actions_p1.append(np.array(action_p1, dtype=np.float32))
         actions_p2.append(np.array(action_p2, dtype=np.float32))
@@ -718,11 +749,14 @@ def record_episode(
     timelimit = scenario["timelimit"]
     num_bots = scenario["bots"]
 
+    use_random_policy = random.random() < RANDOM_POLICY_PROB
+
     if mode == "pvp":
         # --- PvP: direct frame capture at 160x120, upscale to 640x480 ---
         play_data = _play_multiplayer(
             actor_critic, rnn_size, device,
             wad_path, doom_map, timelimit, port,
+            use_random_policy=use_random_policy,
         )
         if play_data is None:
             return None
@@ -755,6 +789,7 @@ def record_episode(
             "death_p2": play_data["death_p2"],
             "total_reward_p1": float(np.sum(play_data["rewards_p1"])),
             "total_reward_p2": float(np.sum(play_data["rewards_p2"])),
+            "random_policy": use_random_policy,
         }
 
     else:
@@ -767,6 +802,7 @@ def record_episode(
                 actor_critic, rnn_size, device,
                 wad_path, doom_map, timelimit, num_bots,
                 demo_path,
+                use_random_policy=use_random_policy,
             )
             if play_data is None:
                 return None
@@ -813,6 +849,7 @@ def record_episode(
                 "death_p2": 0.0,
                 "total_reward_p1": float(np.sum(play_data["rewards"][:n_frames])),
                 "total_reward_p2": 0.0,
+                "random_policy": use_random_policy,
             }
 
         finally:
@@ -852,6 +889,11 @@ def record_worker(
     wandb_project: str | None = None,
 ):
     """Worker function for parallel recording. Runs in spawned subprocess."""
+    # Limit PyTorch to 1 CPU thread per worker to avoid contention
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
+    torch.set_num_threads(1)
+
     import webdataset as wds
 
     port = BASE_PORT + worker_id * 10
@@ -959,6 +1001,7 @@ def record_worker(
                 "death_p2": ep_data["death_p2"],
                 "game_tics": ep_data["game_tics"],
                 "duration_s": ep_data["duration_s"],
+                "random_policy": ep_data.get("random_policy", False),
                 "timestamp": time.time(),
                 "worker_id": worker_id,
             }
