@@ -371,6 +371,9 @@ class DoomDataset:
                         meta_name = members.get("meta.json")
                         if meta_name is None:
                             continue
+                        # Skip incomplete episodes (missing video or actions)
+                        if "video_p1.mp4" not in members or "actions_p1.npy" not in members:
+                            continue
                         meta_member = tar.getmember(meta_name)
                         meta_bytes = tar.extractfile(meta_member).read()
                         meta = json.loads(meta_bytes)

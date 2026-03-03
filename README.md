@@ -79,6 +79,90 @@ From-scratch training matches pretrained quality at ~150M frames and far surpass
 - **Environment**: ViZDoom `dwango5.wad` deathmatch, 7 built-in bots
 - **Training throughput**: ~28k FPS with 16 workers x 8 envs on A6000
 
+## Data Pipeline
+
+The project includes a full pipeline for recording gameplay, encoding to latent representations, and preparing datasets for world model training.
+
+### 1. Record Gameplay
+
+Record AI-vs-AI multiplayer games (PvP with optional bots) or single-player bot games:
+
+```bash
+# Record PvP games (2 AI players + random bots), 100h target
+python doom_arena/record.py --experiment sf_dm_train_v1 --mode pvp \
+    --total-hours 100 --num-workers 4
+
+# Multi-node recording (unique worker-id-offset per node to avoid shard collisions)
+python doom_arena/record.py --experiment sf_dm_train_v1 --mode pvp \
+    --total-hours 100 --num-workers 4 --worker-id-offset 4 --base-port 5600
+```
+
+Output: WebDataset shards in `datasets/pvp_recordings/` containing per-episode MP4 video, actions, rewards, and metadata for both players.
+
+Features:
+- **Per-player policy diversity**: Each player independently has a 20% chance of using random actions (vs trained policy)
+- **Bot count variation**: PvP games randomly include 0-6 additional bots
+- **Multi-node support**: `--worker-id-offset` and `--base-port` prevent shard/port collisions across nodes
+
+### 2. Validate Autoencoder
+
+Before encoding the full dataset, verify DC-AE encode-decode quality:
+
+```bash
+python preprocessing/validate_ae.py
+```
+
+Generates `preprocessing/ae_validation_report.html` with side-by-side original vs reconstructed frames, PSNR/SSIM metrics, and latent statistics.
+
+### 3. Encode to Latents
+
+Compress video frames to DC-AE-Lite latent representations (96x compression):
+
+```bash
+# Single GPU
+python preprocessing/encode_dataset.py
+
+# Multi-node parallel encoding (3 workers across 3 GPU nodes)
+python preprocessing/encode_dataset.py --worker-id 0 --num-workers 3 --gpu 0  # node A
+python preprocessing/encode_dataset.py --worker-id 1 --num-workers 3 --gpu 0  # node B
+python preprocessing/encode_dataset.py --worker-id 2 --num-workers 3 --gpu 0  # node C
+```
+
+Each frame (480x640x3) is encoded to a (32, 15, 20) float16 latent (19.2 KB per frame). Output WebDataset shards in `datasets/pvp_latents/` contain paired latent-action data for both players.
+
+Features:
+- **Multi-node**: Workers use round-robin episode assignment with separate shard files (`latent-w{id}-*.tar`) and progress files (`progress-w{id}.json`)
+- **Resume**: Progress tracked per worker; workers cross-check all progress files to avoid re-encoding
+- **torch.compile**: Encoder compiled with `reduce-overhead` mode for ~2x throughput
+
+### 4. Inspect & Validate
+
+Inspect the recorded or encoded datasets:
+
+```bash
+# Inspect raw PvP recordings (side-by-side P1/P2 video, action heatmaps, downloadable MP4s)
+python preprocessing/inspect_pvp.py --n-episodes 5
+
+# Inspect latent dataset (decoded frames, original-vs-decoded PSNR, alignment checks)
+python preprocessing/inspect_latents.py --n-episodes 5
+```
+
+### Latent Dataset Format
+
+Each episode in the output WebDataset contains:
+
+| File | Shape | Description |
+|------|-------|-------------|
+| `latents_p1.npy` | (N, 32, 15, 20) float16 | Player 1 encoded frames |
+| `latents_p2.npy` | (N, 32, 15, 20) float16 | Player 2 encoded frames (PvP only) |
+| `actions_p1.npy` | (N, 14) float32 | Player 1 actions (aligned by frame index) |
+| `actions_p2.npy` | (N, 14) float32 | Player 2 actions (PvP only) |
+| `rewards_p1.npy` | (N,) float32 | Player 1 rewards |
+| `rewards_p2.npy` | (N,) float32 | Player 2 rewards (PvP only) |
+| `meta.json` | — | Scenario, bot count, policy flags, latent metadata |
+
+`latents[t]` + `actions[t]` gives the paired observation-action at timestep t.
+
 ## Project Structure
 
 ```
@@ -90,11 +174,19 @@ doom-arena/
     evaluate.py        # Detailed evaluation with game stats
     monitor.py         # Periodic checkpoint eval during training
     play.py            # Human-vs-AI multiplayer deathmatch
+    record.py          # Multi-player gameplay recording pipeline
+    fast_loader.py     # GPU-accelerated WebDataset loader (NVDEC)
     download_models.py # Download pretrained models from HuggingFace
     sample_frames.py   # Sample and compare frames across models
     log_wandb.py       # Log evaluation results to wandb
+  preprocessing/
+    validate_ae.py     # DC-AE encode-decode quality validation
+    encode_dataset.py  # Full dataset encoding to latents (multi-node)
+    inspect_pvp.py     # PvP recording inspection report
+    inspect_latents.py # Latent dataset validation report
   pyproject.toml
   sf_train_dir/        # Experiment checkpoints (gitignored)
+  datasets/            # Recorded & encoded datasets (gitignored)
   results/             # Eval results & videos (gitignored)
 ```
 

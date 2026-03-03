@@ -259,7 +259,10 @@ def get_action_spaces():
     return _ACTION_SPACES
 
 
-RANDOM_POLICY_PROB = 0.05  # 5% of episodes use fully random actions
+RANDOM_POLICY_PROB = 0.20  # per-player probability of using random actions (avoids policy bias)
+
+# Bot count options for PvP mode (weighted toward more bots for chaotic games)
+PVP_BOT_COUNTS = [0, 2, 2, 4, 4, 4, 6, 6]
 
 
 def sample_random_action() -> list:
@@ -519,13 +522,17 @@ def _play_multiplayer(
     doom_map: str,
     timelimit: float,
     port: int,
-    use_random_policy: bool = False,
+    num_bots: int = 0,
+    use_random_p1: bool = False,
+    use_random_p2: bool = False,
 ) -> dict | None:
     """Play one 2-player episode at 160x120, recording frames and actions.
 
     Uses ASYNC_PLAYER mode with threaded make_action to avoid sync deadlocks.
     No demo recording (not supported in ASYNC_PLAYER multiplayer) — instead
     captures 160x120 frames directly and upscales to 640x480 for video.
+    Optionally adds bots alongside the 2 AI players for more chaotic games.
+    Each player independently may use random or trained policy.
     """
     host_game = create_play_game(wad_path, doom_map, timelimit, port=port, is_host=True)
     join_game = create_play_game(wad_path, doom_map, timelimit, port=port, is_host=False)
@@ -561,6 +568,10 @@ def _play_multiplayer(
                 pass
         print(f"[record] Init failed: host={errors[0]}, join={errors[1]}")
         return None
+
+    # Add bots (host only, after init but before new_episode)
+    for _ in range(num_bots):
+        host_game.send_game_command("addbot")
 
     # Start episodes via threads (new_episode() syncs between players)
     ep_errors = [None, None]
@@ -641,9 +652,9 @@ def _play_multiplayer(
         frames_p2.append(frame_p2)
 
         if tic % DECISION_INTERVAL == 0:
-            if use_random_policy:
+            # P1 action
+            if use_random_p1:
                 action_p1 = sample_random_action()
-                action_p2 = sample_random_action()
             else:
                 with torch.no_grad():
                     meas_p1 = extract_measurements(host_game)
@@ -653,6 +664,11 @@ def _play_multiplayer(
                     rnn_p1 = res_p1["new_rnn_states"]
                     action_p1 = convert_action(res_p1["actions"].cpu().numpy())
 
+            # P2 action
+            if use_random_p2:
+                action_p2 = sample_random_action()
+            else:
+                with torch.no_grad():
                     meas_p2 = extract_measurements(join_game)
                     obs_p2 = preprocess_for_model(state_p2.screen_buffer, meas_p2, device)
                     norm_p2 = actor_critic.normalize_obs(obs_p2)
@@ -749,14 +765,18 @@ def record_episode(
     timelimit = scenario["timelimit"]
     num_bots = scenario["bots"]
 
-    use_random_policy = random.random() < RANDOM_POLICY_PROB
-
     if mode == "pvp":
-        # --- PvP: direct frame capture at 160x120, upscale to 640x480 ---
+        # --- PvP: randomize bot count and per-player random policy ---
+        num_bots = random.choice(PVP_BOT_COUNTS)
+        use_random_p1 = random.random() < RANDOM_POLICY_PROB
+        use_random_p2 = random.random() < RANDOM_POLICY_PROB
+
         play_data = _play_multiplayer(
             actor_critic, rnn_size, device,
             wad_path, doom_map, timelimit, port,
-            use_random_policy=use_random_policy,
+            num_bots=num_bots,
+            use_random_p1=use_random_p1,
+            use_random_p2=use_random_p2,
         )
         if play_data is None:
             return None
@@ -789,11 +809,13 @@ def record_episode(
             "death_p2": play_data["death_p2"],
             "total_reward_p1": float(np.sum(play_data["rewards_p1"])),
             "total_reward_p2": float(np.sum(play_data["rewards_p2"])),
-            "random_policy": use_random_policy,
+            "random_policy_p1": use_random_p1,
+            "random_policy_p2": use_random_p2,
         }
 
     else:
         # --- Bots: demo-based (play at 160x120, replay at 640x480) ---
+        use_random_policy = random.random() < RANDOM_POLICY_PROB
         tmp_dir = tempfile.mkdtemp(prefix="doom_demo_")
         demo_path = os.path.join(tmp_dir, "p1.lmp")
 
@@ -887,6 +909,7 @@ def record_worker(
     target_secs: float,
     progress_queue,
     wandb_project: str | None = None,
+    base_port: int = BASE_PORT,
 ):
     """Worker function for parallel recording. Runs in spawned subprocess."""
     # Limit PyTorch to 1 CPU thread per worker to avoid contention
@@ -896,7 +919,7 @@ def record_worker(
 
     import webdataset as wds
 
-    port = BASE_PORT + worker_id * 10
+    port = base_port + worker_id * 10
 
     # Discover checkpoints for all experiments
     all_checkpoints = {}
@@ -1001,7 +1024,8 @@ def record_worker(
                 "death_p2": ep_data["death_p2"],
                 "game_tics": ep_data["game_tics"],
                 "duration_s": ep_data["duration_s"],
-                "random_policy": ep_data.get("random_policy", False),
+                "random_policy_p1": ep_data.get("random_policy_p1", ep_data.get("random_policy", False)),
+                "random_policy_p2": ep_data.get("random_policy_p2", ep_data.get("random_policy", False)),
                 "timestamp": time.time(),
                 "worker_id": worker_id,
             }
@@ -1011,9 +1035,10 @@ def record_worker(
                 "video_p1.mp4": ep_data["video_p1"],
                 "actions_p1.npy": _npy_bytes(ep_data["actions_p1"]),
                 "rewards_p1.npy": _npy_bytes(ep_data["rewards_p1"]),
-                "demo_p1.lmp": ep_data["demo_p1"],
                 "meta.json": json.dumps(meta).encode(),
             }
+            if ep_data.get("demo_p1"):
+                sample["demo_p1.lmp"] = ep_data["demo_p1"]
             if ep_data["video_p2"]:
                 sample["video_p2.mp4"] = ep_data["video_p2"]
             if ep_data["actions_p2"].size > 0:
@@ -1033,6 +1058,7 @@ def record_worker(
                 "done", worker_id, scenario_name, game_secs,
                 ep_data["frag_p1"], ep_data["frag_p2"],
                 ep_data["n_frames"], tics_per_sec,
+                ep_data["n_bots"],
             ))
 
             if wandb_run:
@@ -1076,6 +1102,10 @@ def main():
     parser.add_argument("--mode", choices=["bots", "pvp"], default="bots",
                         help="Game mode: bots (1 player + bots) or pvp (2 AI players)")
     parser.add_argument("--wandb-project", default="", help="wandb project (empty to disable)")
+    parser.add_argument("--base-port", type=int, default=BASE_PORT,
+                        help="Base port for multiplayer (offset by worker_id*10)")
+    parser.add_argument("--worker-id-offset", type=int, default=0,
+                        help="Offset added to worker IDs (for multi-node runs)")
     args = parser.parse_args()
 
     experiments = [e.strip() for e in args.experiment.split(",")]
@@ -1096,7 +1126,8 @@ def main():
         progress_queue = manager.Queue()
 
         procs = []
-        for wid in range(args.num_workers):
+        for local_wid in range(args.num_workers):
+            wid = local_wid + args.worker_id_offset
             p = ctx.Process(
                 target=record_worker,
                 name=f"record-worker-{wid}",
@@ -1107,6 +1138,7 @@ def main():
                     args.shard_size, secs_per_worker,
                     progress_queue,
                     args.wandb_project if args.wandb_project else None,
+                    args.base_port,
                 ),
             )
             p.start()
@@ -1134,17 +1166,17 @@ def main():
 
             kind = msg[0]
             if kind == "done":
-                _, wid, sc, game_secs, f1, f2, nf, tps = msg
+                _, wid, sc, game_secs, f1, f2, nf, tps, nb = msg
                 accumulated_secs += game_secs
                 total_episodes += 1
                 hours = accumulated_secs / 3600.0
                 if pbar:
                     pbar.n = min(hours, args.total_hours)
-                    pbar.set_postfix(ep=total_episodes, sc=sc, tps=f"{tps:.0f}")
+                    pbar.set_postfix(ep=total_episodes, sc=sc, bots=nb, tps=f"{tps:.0f}")
                     pbar.refresh()
                 else:
                     print(f"  [{hours:.2f}h] ep={total_episodes} {sc} "
-                          f"frags={f1:.0f}/{f2:.0f} frames={nf} {tps:.0f} tics/s")
+                          f"frags={f1:.0f}/{f2:.0f} frames={nf} bots={nb} {tps:.0f} tics/s")
             elif kind == "worker_done":
                 _, wid, wsecs, weps = msg
                 workers_done += 1

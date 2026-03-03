@@ -2,9 +2,13 @@ sf_train_dir/
 results/
 datasets/
 wandb/
+logs/
 .venv/
 __pycache__/
 *.egg-info/
 *.pyc
 .DS_Store
 _vizdoom.ini
+preprocessing/*.html
+preprocessing/*.txt
+vizdoom-crash.log
