@@ -313,9 +313,8 @@ def main():
                 done_ids.add(ep_id)
                 all_done_ids.add(ep_id)
 
-                # Save progress every 10 episodes
-                if n_done % 10 == 0:
-                    save_progress(args.output_dir, done_ids, args.worker_id)
+                # Save progress every episode (safe for kill/restart)
+                save_progress(args.output_dir, done_ids, args.worker_id)
 
                 elapsed = time.perf_counter() - t_start
                 fps = total_frames / elapsed
