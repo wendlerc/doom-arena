@@ -213,7 +213,25 @@ only extracted 1 random clip of 16 frames — a 600x I/O waste. By yielding all 
 non-overlapping clips per episode, we amortize the shard read and throughput jumps
 from 6 fps to 2,000 fps on NFS (330x) or 20,000 fps on local NVMe (3,300x).
 
-For training: `rsync -av datasets/pvp_latents/ /tmp/pvp_latents/` before launching.
+### Realistic training params: `clip_len=70`, `batch_size=64`, `num_workers=4`
+
+| Storage | Frames/s | Batches/s | Seconds/batch |
+|---------|----------|-----------|---------------|
+| NFS | 3,356 | 0.75 | 1.33s |
+| **Local NVMe** | **22,371** | **4.99** | **0.20s** |
+
+Local NVMe gives a batch every 200ms — will saturate any GPU. NFS at 1.33s/batch
+is borderline depending on model size.
+
+### Setup for training
+
+Dataset is ~812 GB projected. Local NVMe has 1.4 TB free (on osaka).
+
+```bash
+rsync -av datasets/pvp_latents/ /tmp/pvp_latents/
+```
+
+Then point the loader at `/tmp/pvp_latents`.
 
 wandb runs: https://wandb.ai/chrisxx/doom-arena
 
