@@ -10,12 +10,11 @@ PvP episodes keep both player perspectives (P1 and P2) together as a
 single sample — their frames are temporally aligned from the same game.
 
 Performance note:
-    Shards are ~4GB each. On NFS this yields ~6 frames/s; on local NVMe
-    ~85 frames/s (14x faster). For training, copy shards to local storage:
+    Each episode (~200MB) is exploded into all non-overlapping clips,
+    yielding ~500 clips per episode. On local NVMe: ~20,000 frames/s.
+    On NFS: much slower due to 4GB shard reads. For training, copy to local:
 
         rsync -av datasets/pvp_latents/ /tmp/pvp_latents/
-
-    Then point the loader at /tmp/pvp_latents.
 
 Usage:
     from doom_arena.latent_loader import LatentDataset, LatentTrainLoader
@@ -311,47 +310,60 @@ def _decode_npy(data: bytes) -> np.ndarray:
     return np.load(io.BytesIO(data))
 
 
-def _extract_clip(sample: dict, clip_len: int, rng: random.Random) -> dict:
-    """Extract a random clip of clip_len frames from an episode sample.
+class _ExplodeClips(wds.PipelineStage):
+    """Pipeline stage that yields all non-overlapping clips from each episode."""
 
-    Keeps P1 and P2 temporally aligned.
+    def __init__(self, clip_len: int, rng: random.Random):
+        self.clip_len = clip_len
+        self.rng = rng
+
+    def run(self, src):
+        return _explode_clips(src, self.clip_len, self.rng)
+
+
+def _explode_clips(src, clip_len: int, rng: random.Random):
+    """Yield all non-overlapping clips from each episode.
+
+    An episode with N frames yields floor(N/clip_len) clips.
+    Clips are shuffled per-episode to avoid temporal ordering in batches.
+    P1 and P2 stay temporally aligned.
     """
-    latents_p1 = sample["latents_p1.npy"]
-    n_frames = latents_p1.shape[0]
+    for sample in src:
+        latents_p1 = sample["latents_p1.npy"]
+        n_frames = latents_p1.shape[0]
+        n_clips = n_frames // clip_len
+        if n_clips == 0:
+            continue
 
-    if n_frames <= clip_len:
-        start = 0
-    else:
-        start = rng.randint(0, n_frames - clip_len)
-    end = min(start + clip_len, n_frames)
-    actual_len = end - start
+        # Get arrays, defaulting missing keys to zeros
+        actions_p1 = sample.get("actions_p1.npy", np.zeros((n_frames, 14), dtype=np.float32))
+        rewards_p1 = sample.get("rewards_p1.npy", np.zeros(n_frames, dtype=np.float32))
+        has_p2 = "latents_p2.npy" in sample
+        if has_p2:
+            latents_p2 = sample["latents_p2.npy"]
+            actions_p2 = sample.get("actions_p2.npy", np.zeros((n_frames, 14), dtype=np.float32))
+            rewards_p2 = sample.get("rewards_p2.npy", np.zeros(n_frames, dtype=np.float32))
 
-    def _slice_and_pad(arr):
-        clip = arr[start:end]
-        if actual_len < clip_len:
-            pad_shape = (clip_len - actual_len,) + clip.shape[1:]
-            clip = np.concatenate([clip, np.zeros(pad_shape, dtype=clip.dtype)])
-        return clip
+        # Build clip start indices and shuffle them
+        starts = list(range(0, n_clips * clip_len, clip_len))
+        rng.shuffle(starts)
 
-    n = latents_p1.shape[0]
-    result = {
-        "latents_p1": _slice_and_pad(latents_p1),
-        "actions_p1": _slice_and_pad(sample["actions_p1.npy"]) if "actions_p1.npy" in sample else np.zeros((clip_len, 14), dtype=np.float32),
-        "rewards_p1": _slice_and_pad(sample["rewards_p1.npy"]) if "rewards_p1.npy" in sample else np.zeros(clip_len, dtype=np.float32),
-        "n_frames": actual_len,
-    }
-
-    if "latents_p2.npy" in sample:
-        result["latents_p2"] = _slice_and_pad(sample["latents_p2.npy"])
-        result["actions_p2"] = _slice_and_pad(sample["actions_p2.npy"]) if "actions_p2.npy" in sample else np.zeros((clip_len, 14), dtype=np.float32)
-        result["rewards_p2"] = _slice_and_pad(sample["rewards_p2.npy"]) if "rewards_p2.npy" in sample else np.zeros(clip_len, dtype=np.float32)
-    else:
-        # Pad with zeros for non-PvP episodes so batches have uniform keys
-        result["latents_p2"] = np.zeros_like(result["latents_p1"])
-        result["actions_p2"] = np.zeros_like(result["actions_p1"])
-        result["rewards_p2"] = np.zeros_like(result["rewards_p1"])
-
-    return result
+        for start in starts:
+            end = start + clip_len
+            clip = {
+                "latents_p1": latents_p1[start:end],
+                "actions_p1": actions_p1[start:end],
+                "rewards_p1": rewards_p1[start:end],
+            }
+            if has_p2:
+                clip["latents_p2"] = latents_p2[start:end]
+                clip["actions_p2"] = actions_p2[start:end]
+                clip["rewards_p2"] = rewards_p2[start:end]
+            else:
+                clip["latents_p2"] = np.zeros_like(clip["latents_p1"])
+                clip["actions_p2"] = np.zeros_like(clip["actions_p1"])
+                clip["rewards_p2"] = np.zeros_like(clip["rewards_p1"])
+            yield clip
 
 
 def _collate_clips(batch: list[dict]) -> dict:
@@ -363,7 +375,6 @@ def _collate_clips(batch: list[dict]) -> dict:
         "actions_p2": torch.from_numpy(np.stack([b["actions_p2"] for b in batch])),
         "rewards_p1": torch.from_numpy(np.stack([b["rewards_p1"] for b in batch])),
         "rewards_p2": torch.from_numpy(np.stack([b["rewards_p2"] for b in batch])),
-        "n_frames": torch.tensor([b["n_frames"] for b in batch]),
     }
 
 
@@ -449,8 +460,8 @@ class LatentTrainLoader:
             wds.tarfile_to_samples(handler=log_and_continue),
             # Decode all numpy arrays in one pass (handles both P1 and P2)
             wds.map(_decode_all_npy, handler=log_and_continue),
-            # Extract random clip (randomness provides within-episode shuffling)
-            wds.map(lambda sample: _extract_clip(sample, clip_len, clip_rng), handler=log_and_continue),
+            # Explode each episode into all non-overlapping clips (shuffled)
+            _ExplodeClips(clip_len, clip_rng),
             # Batch
             wds.batched(batch_size, partial=False, collation_fn=_collate_clips),
         ])
@@ -460,8 +471,8 @@ class LatentTrainLoader:
         # Compute epoch length
         if resampled:
             if num_samples is None:
-                # Estimate from shard count (rough: ~13 episodes/shard)
-                num_samples = len(shard_urls) * 13
+                # ~13 episodes/shard, ~500 clips/episode (8000 frames / 16)
+                num_samples = len(shard_urls) * 13 * 500
             global_batch_size = batch_size * world_size
             num_batches = math.ceil(num_samples / global_batch_size)
             num_workers_actual = max(1, num_workers)

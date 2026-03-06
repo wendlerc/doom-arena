@@ -34,7 +34,7 @@ def benchmark(args):
 
     t_start = time.time()
     t0 = t_start
-    total_episodes = 0
+    total_clips = 0
     total_frames = 0
 
     for i, batch in enumerate(loader):
@@ -42,42 +42,42 @@ def benchmark(args):
         dt = t1 - t0
         bs = batch["latents_p1"].shape[0]
         cl = batch["latents_p1"].shape[1]
-        total_episodes += bs
+        total_clips += bs
         total_frames += bs * cl
 
         wall = t1 - t_start
-        eps_per_sec = total_episodes / wall if wall > 0 else 0
+        clips_per_sec = total_clips / wall if wall > 0 else 0
         frames_per_sec = total_frames / wall if wall > 0 else 0
 
         wandb.log({
             "batch_idx": i,
             "batch_time_s": dt,
-            "cumulative_episodes": total_episodes,
+            "cumulative_clips": total_clips,
             "cumulative_frames": total_frames,
-            "episodes_per_sec": eps_per_sec,
+            "clips_per_sec": clips_per_sec,
             "frames_per_sec": frames_per_sec,
             "wall_time_s": wall,
         })
 
-        print(f"Batch {i:3d} | dt={dt:6.2f}s | wall={wall:.1f}s | "
-              f"{eps_per_sec:.1f} eps/s | {frames_per_sec:.0f} frames/s",
-              flush=True)
+        if i % 50 == 0 or i < 5:
+            print(f"Batch {i:3d} | dt={dt:6.2f}s | wall={wall:.1f}s | "
+                  f"{clips_per_sec:.0f} clips/s | {frames_per_sec:.0f} frames/s",
+                  flush=True)
         t0 = t1
 
     wall_total = time.time() - t_start
-    warm_start = min(5, loader.num_batches // 2)
 
     wandb.summary.update({
         "total_wall_s": wall_total,
-        "total_episodes": total_episodes,
+        "total_clips": total_clips,
         "total_frames": total_frames,
-        "avg_eps_per_sec": total_episodes / wall_total,
+        "avg_clips_per_sec": total_clips / wall_total,
         "avg_frames_per_sec": total_frames / wall_total,
     })
 
     print(f"\n--- Summary ---")
-    print(f"  Total: {total_episodes} episodes, {total_frames} frames in {wall_total:.1f}s")
-    print(f"  Avg: {total_episodes/wall_total:.1f} eps/s, {total_frames/wall_total:.0f} frames/s")
+    print(f"  Total: {total_clips} clips, {total_frames} frames in {wall_total:.1f}s")
+    print(f"  Avg: {total_clips/wall_total:.0f} clips/s, {total_frames/wall_total:.0f} frames/s")
 
     run.finish()
 
