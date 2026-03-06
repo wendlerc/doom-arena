@@ -9,6 +9,14 @@ training, and clip-based iteration for video model training.
 PvP episodes keep both player perspectives (P1 and P2) together as a
 single sample — their frames are temporally aligned from the same game.
 
+Performance note:
+    Shards are ~4GB each. On NFS this yields ~6 frames/s; on local NVMe
+    ~85 frames/s (14x faster). For training, copy shards to local storage:
+
+        rsync -av datasets/pvp_latents/ /tmp/pvp_latents/
+
+    Then point the loader at /tmp/pvp_latents.
+
 Usage:
     from doom_arena.latent_loader import LatentDataset, LatentTrainLoader
 
@@ -325,17 +333,18 @@ def _extract_clip(sample: dict, clip_len: int, rng: random.Random) -> dict:
             clip = np.concatenate([clip, np.zeros(pad_shape, dtype=clip.dtype)])
         return clip
 
+    n = latents_p1.shape[0]
     result = {
         "latents_p1": _slice_and_pad(latents_p1),
-        "actions_p1": _slice_and_pad(sample["actions_p1.npy"]),
-        "rewards_p1": _slice_and_pad(sample["rewards_p1.npy"]),
+        "actions_p1": _slice_and_pad(sample["actions_p1.npy"]) if "actions_p1.npy" in sample else np.zeros((clip_len, 14), dtype=np.float32),
+        "rewards_p1": _slice_and_pad(sample["rewards_p1.npy"]) if "rewards_p1.npy" in sample else np.zeros(clip_len, dtype=np.float32),
         "n_frames": actual_len,
     }
 
     if "latents_p2.npy" in sample:
         result["latents_p2"] = _slice_and_pad(sample["latents_p2.npy"])
-        result["actions_p2"] = _slice_and_pad(sample["actions_p2.npy"])
-        result["rewards_p2"] = _slice_and_pad(sample["rewards_p2.npy"])
+        result["actions_p2"] = _slice_and_pad(sample["actions_p2.npy"]) if "actions_p2.npy" in sample else np.zeros((clip_len, 14), dtype=np.float32)
+        result["rewards_p2"] = _slice_and_pad(sample["rewards_p2.npy"]) if "rewards_p2.npy" in sample else np.zeros(clip_len, dtype=np.float32)
     else:
         # Pad with zeros for non-PvP episodes so batches have uniform keys
         result["latents_p2"] = np.zeros_like(result["latents_p1"])
@@ -441,7 +450,7 @@ class LatentTrainLoader:
             # Decode all numpy arrays in one pass (handles both P1 and P2)
             wds.map(_decode_all_npy, handler=log_and_continue),
             # Extract random clip (randomness provides within-episode shuffling)
-            wds.map(lambda sample: _extract_clip(sample, clip_len, clip_rng)),
+            wds.map(lambda sample: _extract_clip(sample, clip_len, clip_rng), handler=log_and_continue),
             # Batch
             wds.batched(batch_size, partial=False, collation_fn=_collate_clips),
         ])
