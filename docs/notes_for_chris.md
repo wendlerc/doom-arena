@@ -1,5 +1,21 @@
 # Notes for Chris
 
+## Final Dataset Stats
+
+| Property | Value |
+|----------|-------|
+| Episodes | 2,606 (all PvP) |
+| Frames (per player) | 21,060,484 |
+| Frames (both players) | 42,120,968 |
+| Duration (per player) | 167.1 hours |
+| Duration (both players) | 334.2 hours |
+| Latent shards | 186 shards, 756 GB |
+| MP4 shards | 1,320 shards, 902 GB |
+| Resolution | 480x640, 35 fps |
+| VAE | DC-AE-Lite f32c32 (mit-han-lab/dc-ae-lite-f32c32-sana-1.1-diffusers) |
+| Latent shape per frame | (32, 15, 20) float16 |
+| Health check | All 186 shards healthy, 0 issues |
+
 ## Dataset Size Comparison: MP4 Recordings vs Latent Shards
 
 Both measured including both player perspectives (2 video streams per PvP episode).
@@ -7,7 +23,7 @@ Both measured including both player perspectives (2 video streams per PvP episod
 | Format | Total Size | MB per minute of video | Details |
 |--------|-----------|----------------------|---------|
 | **MP4 recordings** | 902 GB | **~46 MB/min** | Raw mp4 video + actions + rewards in WebDataset tars |
-| **Latent shards** | 528 GB (65% done, ~812 GB projected) | **~40 MB/min** | DC-AE-Lite f32c32 latents, float16, shape (N,32,15,20) |
+| **Latent shards** | 756 GB | **~40 MB/min** | DC-AE-Lite f32c32 latents, float16, shape (N,32,15,20) |
 
 So latents are only **~13% smaller** per minute of video than the raw MP4s. The latents
 are uncompressed float16 numpy arrays (32 channels x 15 x 20 spatial), while the MP4s
