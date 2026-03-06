@@ -249,6 +249,8 @@ rsync -av datasets/pvp_latents/ /tmp/pvp_latents/
 
 Then point the loader at `/tmp/pvp_latents`.
 
+**Current local cache (osaka):** First 20 shards (81 GB) at `/tmp/pvp_latents/`.
+
 wandb runs: https://wandb.ai/chrisxx/doom-arena
 
 ---
