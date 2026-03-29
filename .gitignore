@@ -1,5 +1,6 @@
 sf_train_dir/
 results/
+recordings/
 datasets/
 wandb/
 logs/
