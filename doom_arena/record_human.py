@@ -1,9 +1,10 @@
 """
 Record human-vs-AI gameplay as WebDataset shards.
 
-The AI runs as a multiplayer host (ASYNC_PLAYER, 160x120, hidden window).
-The human joins in SPECTATOR mode (640x480, visible window) with keyboard/mouse.
-Both players' frames, actions, and rewards are recorded.
+The AI runs as a multiplayer host (ASYNC_PLAYER, 160x120, hidden window)
+in a background thread. The human joins in SPECTATOR mode (640x480, visible
+window) with keyboard/mouse in the main thread. Both players' frames,
+actions, and rewards are recorded independently and aligned afterward.
 
 Usage:
     doom-record-human --experiment my_run --num-bots 4 --timelimit 5
@@ -78,8 +79,96 @@ def create_human_game(
         f"+viz_connect_timeout 30 "
         f"+name Human +colorset 3"
     )
+
     game.set_episode_timeout(int(timelimit * 60 * game.get_ticrate()))
     return game
+
+
+def _configure_human_controls(game: vzd.DoomGame):
+    """Set up WASD + Shift + 1-7 controls and low mouse sensitivity."""
+    binds = [
+        'bind w +forward',
+        'bind s +back',
+        'bind a +moveleft',
+        'bind d +moveright',
+        'bind shift +speed',
+        'bind 1 "slot 1"',
+        'bind 2 "slot 2"',
+        'bind 3 "slot 3"',
+        'bind 4 "slot 4"',
+        'bind 5 "slot 5"',
+        'bind 6 "slot 6"',
+        'bind 7 "slot 7"',
+    ]
+    for cmd in binds:
+        game.send_game_command(cmd)
+    game.send_game_command("set mouse_sensitivity 0.1")
+
+
+def _ai_thread_fn(
+    actor_critic,
+    rnn_size: int,
+    device: torch.device,
+    ai_game: vzd.DoomGame,
+    results: dict,
+):
+    """Run the AI agent loop in a background thread, recording frames/actions/rewards."""
+    try:
+        rnn = torch.zeros(1, rnn_size, device=device)
+        ai_action = [0.0] * len(TRAINING_BUTTONS)
+        zero_action = [0.0] * len(TRAINING_BUTTONS)
+
+        frames = []
+        actions = []
+        rewards = []
+        tic = 0
+
+        while not ai_game.is_episode_finished():
+            state = ai_game.get_state()
+
+            if state is None:
+                # Death tic
+                actions.append(np.array(zero_action, dtype=np.float32))
+                ai_game.make_action(zero_action)
+                rewards.append(float(ai_game.get_last_reward()))
+                if ai_game.is_player_dead():
+                    ai_game.respawn_player()
+                tic += 1
+                continue
+
+            # Capture frame (160x120)
+            frame = np.transpose(state.screen_buffer, (1, 2, 0))
+            frames.append(frame)
+
+            # Decide action
+            if tic % DECISION_INTERVAL == 0:
+                with torch.no_grad():
+                    meas = extract_measurements(ai_game)
+                    obs = preprocess_for_model(state.screen_buffer, meas, device)
+                    norm = actor_critic.normalize_obs(obs)
+                    result = actor_critic(norm, rnn)
+                    rnn = result["new_rnn_states"]
+                    ai_action = convert_action(result["actions"].cpu().numpy())
+
+            actions.append(np.array(ai_action, dtype=np.float32))
+            ai_game.make_action([float(a) for a in ai_action])
+            rewards.append(float(ai_game.get_last_reward()))
+
+            if ai_game.is_player_dead():
+                ai_game.respawn_player()
+            tic += 1
+
+        results["frames"] = frames
+        results["actions"] = actions
+        results["rewards"] = rewards
+        results["tic"] = tic
+        results["frag"] = float(ai_game.get_game_variable(vzd.GameVariable.FRAGCOUNT))
+        results["death"] = float(ai_game.get_game_variable(vzd.GameVariable.DEATHCOUNT))
+
+    except Exception as e:
+        results["error"] = str(e)
+        import traceback
+        traceback.print_exc()
 
 
 def play_and_record(
@@ -93,6 +182,9 @@ def play_and_record(
     num_bots: int,
 ) -> dict | None:
     """Play one human-vs-AI episode, recording both perspectives.
+
+    AI runs in a background thread; human runs in the main thread.
+    The ViZDoom multiplayer engine handles synchronization internally.
 
     Returns episode data dict or None on failure.
     """
@@ -134,6 +226,9 @@ def play_and_record(
         print(f"[record-human] Init failed: ai={errors[0]}, human={errors[1]}")
         return None
 
+    # Configure human controls (must be after init)
+    _configure_human_controls(human_game)
+
     # Add bots on host
     for _ in range(num_bots):
         ai_game.send_game_command("addbot")
@@ -170,19 +265,23 @@ def play_and_record(
         return None
 
     print("[record-human] Game started! Use keyboard/mouse in the game window.")
+    print("[record-human] Press Ctrl+C to end early and save the recording.\n")
 
-    rnn = torch.zeros(1, rnn_size, device=device)
-    ai_action = [0.0] * len(TRAINING_BUTTONS)
+    # --- Run AI in background thread ---
+    ai_results = {}
+    ai_thread = threading.Thread(
+        target=_ai_thread_fn,
+        args=(actor_critic, rnn_size, device, ai_game, ai_results),
+        daemon=True,
+    )
+    ai_thread.start()
+
+    # --- Run human in main thread ---
     zero_action = [0.0] * len(TRAINING_BUTTONS)
+    human_actions = []
+    human_rewards = []
 
-    # AI frames stored in memory (160x120 ≈ small)
-    ai_frames = []
-    human_actions_list = []
-    ai_actions_list = []
-    human_rewards_list = []
-    ai_rewards_list = []
-
-    # Human frames written to temp video to avoid multi-GB RAM usage
+    # Write human frames to temp video on-the-fly (avoids multi-GB RAM)
     w, h = REPLAY_RESOLUTION
     tmp_video = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
     tmp_video_path = tmp_video.name
@@ -191,100 +290,56 @@ def play_and_record(
     human_writer = cv2.VideoWriter(tmp_video_path, fourcc, GAME_FPS, (w, h))
     human_frame_count = 0
 
-    tic = 0
     t0 = time.perf_counter()
-    frag_human = frag_ai = death_human = death_ai = 0.0
-
-    def _advance_both(ai_act):
-        """Advance AI (make_action) and human (advance_action) in parallel."""
-        def do_ai():
-            ai_game.make_action([float(a) for a in ai_act])
-
-        def do_human():
-            human_game.advance_action()
-
-        t1 = threading.Thread(target=do_ai)
-        t2 = threading.Thread(target=do_human)
-        t1.start()
-        t2.start()
-        t1.join(timeout=10)
-        t2.join(timeout=10)
 
     try:
-        while not ai_game.is_episode_finished() and not human_game.is_episode_finished():
-            ai_state = ai_game.get_state()
-            human_state = human_game.get_state()
+        while not human_game.is_episode_finished():
+            human_game.advance_action()
 
-            if ai_state is None or human_state is None:
-                # Death tic — record zero actions
-                human_actions_list.append(np.array(zero_action, dtype=np.float32))
-                ai_actions_list.append(np.array(zero_action, dtype=np.float32))
-                _advance_both(zero_action)
-                ai_rewards_list.append(float(ai_game.get_last_reward()))
-                human_rewards_list.append(float(human_game.get_last_reward()))
-                if ai_game.is_player_dead():
-                    ai_game.respawn_player()
-                if human_game.is_player_dead():
-                    human_game.respawn_player()
-                tic += 1
-                continue
+            state = human_game.get_state()
+            if state is not None and state.screen_buffer is not None:
+                frame = np.transpose(state.screen_buffer, (1, 2, 0))
+                human_writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+                human_frame_count += 1
 
-            # Capture AI frame (160x120)
-            ai_frame = np.transpose(ai_state.screen_buffer, (1, 2, 0))
-            ai_frames.append(ai_frame)
-
-            # Capture human frame (640x480) — write to temp video immediately
-            human_frame = np.transpose(human_state.screen_buffer, (1, 2, 0))
-            human_writer.write(cv2.cvtColor(human_frame, cv2.COLOR_RGB2BGR))
-            human_frame_count += 1
-
-            # AI action decision
-            if tic % DECISION_INTERVAL == 0:
-                with torch.no_grad():
-                    meas = extract_measurements(ai_game)
-                    obs = preprocess_for_model(ai_state.screen_buffer, meas, device)
-                    norm = actor_critic.normalize_obs(obs)
-                    result = actor_critic(norm, rnn)
-                    rnn = result["new_rnn_states"]
-                    ai_action = convert_action(result["actions"].cpu().numpy())
-
-            ai_actions_list.append(np.array(ai_action, dtype=np.float32))
-
-            # Advance both players
-            _advance_both(ai_action)
-
-            # Capture human's action after advance
+            # Record human's action
             human_act = human_game.get_last_action()
-            human_actions_list.append(np.array(human_act, dtype=np.float32))
+            human_actions.append(np.array(human_act, dtype=np.float32))
+            human_rewards.append(float(human_game.get_last_reward()))
 
-            ai_rewards_list.append(float(ai_game.get_last_reward()))
-            human_rewards_list.append(float(human_game.get_last_reward()))
-
-            # Track stats
-            if tic % DECISION_INTERVAL == 0:
-                frag_human = human_game.get_game_variable(vzd.GameVariable.FRAGCOUNT)
-                frag_ai = ai_game.get_game_variable(vzd.GameVariable.FRAGCOUNT)
-                death_human = human_game.get_game_variable(vzd.GameVariable.DEATHCOUNT)
-                death_ai = ai_game.get_game_variable(vzd.GameVariable.DEATHCOUNT)
-
-            if ai_game.is_player_dead():
-                ai_game.respawn_player()
             if human_game.is_player_dead():
                 human_game.respawn_player()
-
-            tic += 1
-
-    except Exception as e:
-        print(f"[record-human] Error during game loop: {e}")
-        import traceback
-        traceback.print_exc()
+    except KeyboardInterrupt:
+        print("\n[record-human] Ctrl+C received — ending match and saving recording...")
 
     duration = time.perf_counter() - t0
-    human_writer.release()
-    ai_game.close()
-    human_game.close()
+    frag_human = frag_ai = death_human = death_ai = 0.0
+    try:
+        frag_human = float(human_game.get_game_variable(vzd.GameVariable.FRAGCOUNT))
+        death_human = float(human_game.get_game_variable(vzd.GameVariable.DEATHCOUNT))
+    except Exception:
+        pass
 
-    if not ai_frames:
+    human_writer.release()
+    try:
+        human_game.close()
+    except Exception:
+        pass
+
+    # Wait for AI thread to finish
+    ai_thread.join(timeout=15)
+    try:
+        ai_game.close()
+    except Exception:
+        pass
+
+    if "error" in ai_results:
+        print(f"[record-human] AI error: {ai_results['error']}")
+        os.unlink(tmp_video_path)
+        return None
+
+    if not ai_results.get("frames"):
+        print("[record-human] No AI frames captured.")
         os.unlink(tmp_video_path)
         return None
 
@@ -294,10 +349,16 @@ def play_and_record(
     os.unlink(tmp_video_path)
 
     # Upscale AI frames to 640x480 and encode
-    ai_frames_up = [cv2.resize(f, (w, h), interpolation=cv2.INTER_CUBIC) for f in ai_frames]
+    ai_frames_up = [cv2.resize(f, (w, h), interpolation=cv2.INTER_CUBIC)
+                     for f in ai_results["frames"]]
     ai_video_bytes = encode_video(ai_frames_up, GAME_FPS)
 
-    n_frames = min(len(ai_frames), human_frame_count)
+    n_human = len(human_actions)
+    n_ai = len(ai_results["actions"])
+    n_frames = min(n_human, n_ai, human_frame_count, len(ai_results["frames"]))
+
+    frag_ai = ai_results.get("frag", 0.0)
+    death_ai = ai_results.get("death", 0.0)
 
     # Print results
     print(f"\n{'=' * 50}")
@@ -305,23 +366,23 @@ def play_and_record(
     print(f"{'=' * 50}")
     print(f"  Human:  {int(frag_human)} frags, {int(death_human)} deaths")
     print(f"  AI:     {int(frag_ai)} frags, {int(death_ai)} deaths")
-    print(f"  Frames: {n_frames}, Duration: {duration:.1f}s")
+    print(f"  Frames: {n_frames} (human={n_human}, ai={n_ai}), Duration: {duration:.1f}s")
     print(f"{'=' * 50}")
 
     return {
         "human_video": human_video_bytes,
         "ai_video": ai_video_bytes,
-        "human_actions": np.stack(human_actions_list[:n_frames]),
-        "ai_actions": np.stack(ai_actions_list[:n_frames]),
-        "human_rewards": np.array(human_rewards_list[:n_frames], dtype=np.float32),
-        "ai_rewards": np.array(ai_rewards_list[:n_frames], dtype=np.float32),
+        "human_actions": np.stack(human_actions[:n_frames]),
+        "ai_actions": np.stack(ai_results["actions"][:n_frames]),
+        "human_rewards": np.array(human_rewards[:n_frames], dtype=np.float32),
+        "ai_rewards": np.array(ai_results["rewards"][:n_frames], dtype=np.float32),
         "n_frames": n_frames,
-        "game_tics": tic,
+        "game_tics": max(n_human, n_ai),
         "duration_s": duration,
-        "frag_human": float(frag_human),
-        "frag_ai": float(frag_ai),
-        "death_human": float(death_human),
-        "death_ai": float(death_ai),
+        "frag_human": frag_human,
+        "frag_ai": frag_ai,
+        "death_human": death_human,
+        "death_ai": death_ai,
     }
 
 
