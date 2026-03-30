@@ -32,7 +32,7 @@ def make_game(is_host, port=5450):
             "+sv_forcerespawn 1 +sv_noautoaim 1 +sv_respawnprotect 1 "
             "+sv_spawnfarthest 1 +sv_nocrouch 1 +sv_nojump 1 "
             "+sv_nofreelook 1 +sv_noexit 1 "
-            "+viz_respawn_delay 10 +viz_nocheat 1 +viz_connect_timeout 30"
+            "+viz_respawn_delay 10 +viz_connect_timeout 30"
         )
         game.add_game_args("+name P1 +colorset 0")
     else:

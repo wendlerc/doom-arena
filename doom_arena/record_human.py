@@ -9,12 +9,15 @@ actions, and rewards are recorded independently and aligned afterward.
 Usage:
     doom-record-human --experiment my_run --num-bots 4 --timelimit 5
     doom-record-human --experiment my_run --episodes 3 --output datasets/human_recordings
+    doom-record-human-arena --experiment my_run   # you + best checkpoint + 7 bots, 5 min → datasets/recordings
+    uv run python -m doom_arena.record_human arena --experiment my_run   # if console scripts break
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import re
 import tempfile
 import threading
 import time
@@ -48,6 +51,19 @@ from sf_examples.vizdoom.doom.multiplayer.doom_multiagent import (
     DEFAULT_UDP_PORT,
     find_available_port,
 )
+
+_HUMAN_SHARD_RE = re.compile(r"^human-(\d{6})\.tar$")
+
+
+def _next_human_shard_start(output_dir: str) -> int:
+    """First shard index that does not collide with existing human-######.tar files."""
+    out = Path(output_dir)
+    max_idx = -1
+    for p in out.glob("human-*.tar"):
+        m = _HUMAN_SHARD_RE.match(p.name)
+        if m:
+            max_idx = max(max_idx, int(m.group(1)))
+    return max_idx + 1
 
 
 def create_human_game(
@@ -229,11 +245,7 @@ def play_and_record(
     # Configure human controls (must be after init)
     _configure_human_controls(human_game)
 
-    # Add bots on host
-    for _ in range(num_bots):
-        ai_game.send_game_command("addbot")
-
-    # Start episodes via threads
+    # Start episodes via threads (new_episode resets the map; bots must be added after)
     ep_errors = [None, None]
 
     def start_ai_ep():
@@ -263,6 +275,12 @@ def play_and_record(
                 pass
         print(f"[record-human] new_episode failed: ai={ep_errors[0]}, human={ep_errors[1]}")
         return None
+
+    # Match Sample Factory VizdoomEnvMultiplayer.reset(): add bots only after the episode has started.
+    if num_bots > 0:
+        ai_game.send_game_command("removebots")
+        for _ in range(num_bots):
+            ai_game.send_game_command("addbot")
 
     print("[record-human] Game started! Use keyboard/mouse in the game window.")
     print("[record-human] Press Ctrl+C to end early and save the recording.\n")
@@ -386,24 +404,24 @@ def play_and_record(
     }
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Record human-vs-AI gameplay as WebDataset shards"
-    )
-    parser.add_argument("--experiment", default="00_bots_128_fs2_narrow_see_0",
-                        help="AI model experiment name")
-    parser.add_argument("--train-dir", default="./sf_train_dir")
-    parser.add_argument("--checkpoint", default="best", choices=["best", "latest"])
-    parser.add_argument("--num-bots", type=int, default=4, help="Number of built-in bots")
-    parser.add_argument("--timelimit", type=float, default=5.0, help="Match duration in minutes")
-    parser.add_argument("--device", default="cpu")
-    parser.add_argument("--output", default="datasets/human_recordings", help="Output directory")
-    parser.add_argument("--port", type=int, default=None, help="UDP port (auto-detected if not set)")
-    parser.add_argument("--episodes", type=int, default=1, help="Number of episodes to record")
-    parser.add_argument("--wad", default="dwango5.wad", help="WAD file name")
-    parser.add_argument("--map", default="map01", help="Map name")
-    args = parser.parse_args()
+def _build_record_human_parser(description: str) -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description=description)
+    p.add_argument("--experiment", default="00_bots_128_fs2_narrow_see_0",
+                   help="AI model experiment name")
+    p.add_argument("--train-dir", default="./sf_train_dir")
+    p.add_argument("--checkpoint", default="best", choices=["best", "latest"])
+    p.add_argument("--num-bots", type=int, default=4, help="Number of built-in DM bots (addbot)")
+    p.add_argument("--timelimit", type=float, default=5.0, help="Match duration in minutes")
+    p.add_argument("--device", default="cpu")
+    p.add_argument("--output", default="datasets/human_recordings", help="Output directory")
+    p.add_argument("--port", type=int, default=None, help="UDP port (auto-detected if not set)")
+    p.add_argument("--episodes", type=int, default=1, help="Number of episodes to record")
+    p.add_argument("--wad", default="dwango5.wad", help="WAD file name")
+    p.add_argument("--map", default="map01", help="Map name")
+    return p
 
+
+def run_record_human(args: argparse.Namespace) -> None:
     import webdataset as wds
     from sf_examples.vizdoom.train_vizdoom import register_vizdoom_components
 
@@ -412,33 +430,48 @@ def main():
     wad_path = _find_wad(args.wad)
     port = args.port or find_available_port(DEFAULT_UDP_PORT)
 
-    # Load AI model
-    from doom_arena.record import discover_checkpoints, sample_checkpoint
+    from doom_arena.record import select_checkpoint_path
 
-    checkpoints = discover_checkpoints(args.experiment, args.train_dir)
-    if not checkpoints:
-        # Fall back to best/latest checkpoint via load_model with direct path
-        ckpt_dir = Path(args.train_dir) / args.experiment / "checkpoint_p0"
-        prefix = "best_*" if args.checkpoint == "best" else "checkpoint_*"
-        ckpt_files = sorted(ckpt_dir.glob(prefix))
-        if not ckpt_files:
-            ckpt_files = sorted(ckpt_dir.glob("*.pth"))
-        if not ckpt_files:
-            raise FileNotFoundError(f"No checkpoints in {ckpt_dir}")
-        ckpt_path = str(ckpt_files[-1])
-    else:
-        ckpt_path = sample_checkpoint(checkpoints, temperature=0.0)  # Always pick best
+    ckpt_path = select_checkpoint_path(args.experiment, args.train_dir, args.checkpoint)
+    ckpt_path = str(Path(ckpt_path).resolve())
 
     actor_critic, rnn_size, dev = load_model(
         args.experiment, args.train_dir, ckpt_path, args.device,
     )
     ckpt_name = Path(ckpt_path).name
-    print(f"Loaded {args.experiment} [{ckpt_name}] on {args.device}")
+    m_rw = re.search(r"reward_([-\d.]+)\.pth$", ckpt_name)
+    reward_tag = float(m_rw.group(1)) if m_rw else None
+    rw_line = f"score tag in filename: {reward_tag}" if reward_tag is not None else "no reward_* tag in filename"
+
+    print(
+        "\n"
+        + "=" * 72
+        + "\n"
+        "  HUMAN RECORDING — who is controlled by what\n"
+        "  • You (human): spectator client, keyboard/mouse.\n"
+        "  • Exactly ONE neural policy: multiplayer host (this checkpoint).\n"
+        "  • --num-bots are ZDoom engine bots (addbot), NOT extra checkpoints.\n"
+        "    They will not feel like “different policies” you trained.\n"
+        "=" * 72
+        + f"\n  experiment:      {args.experiment}\n"
+        f"  selection mode:    {args.checkpoint}\n"
+        f"  checkpoint file:   {ckpt_name}\n"
+        f"  {rw_line}\n"
+        f"  full path:         {ckpt_path}\n"
+        f"  device:            {args.device}\n"
+        + "=" * 72
+        + "\n"
+    )
 
     os.makedirs(args.output, exist_ok=True)
     shard_pat = os.path.join(args.output, "human-%06d.tar")
+    start_shard = _next_human_shard_start(args.output)
+    if start_shard > 0:
+        print(f"[record-human] Resuming shard numbering at human-{start_shard:06d}.tar")
 
-    with wds.ShardWriter(shard_pat, maxsize=512 * 1024 * 1024) as writer:
+    with wds.ShardWriter(
+        shard_pat, maxsize=512 * 1024 * 1024, start_shard=start_shard
+    ) as writer:
         for ep_idx in range(args.episodes):
             print(f"\n--- Episode {ep_idx + 1}/{args.episodes} ---")
             print(f"Playing on {args.wad} {args.map} with {args.num_bots} bots, "
@@ -459,6 +492,9 @@ def main():
                 "episode_id": ep_id,
                 "mode": "human",
                 "is_human_p1": True,
+                "learned_agent_count": 1,
+                "engine_bots": args.num_bots,
+                "checkpoint_reward_in_filename": reward_tag,
                 "scenario": f"{args.wad.replace('.wad', '')}_{args.timelimit:.0f}min",
                 "map": args.map,
                 "n_bots": args.num_bots,
@@ -500,5 +536,37 @@ def main():
     print(f"\n[record-human] Done. {args.episodes} episodes, {len(shards)} shards in '{args.output}'")
 
 
+def main():
+    parser = _build_record_human_parser("Record human-vs-AI gameplay as WebDataset shards")
+    args = parser.parse_args()
+    run_record_human(args)
+
+
+def main_arena():
+    """Human + best-reward checkpoint AI + 7 DM bots, 5 min, WebDataset under datasets/recordings."""
+    parser = _build_record_human_parser(
+        "Record one 5-minute match: you vs best checkpoint AI with 7 built-in bots → datasets/recordings"
+    )
+    parser.set_defaults(
+        timelimit=5.0,
+        num_bots=7,
+        episodes=1,
+        output="datasets/recordings",
+        checkpoint="best",
+    )
+    args = parser.parse_args()
+    print(
+        "[record-human-arena] Human (you) + trained AI host + 7 engine bots | "
+        f"{args.timelimit:g} min → {args.output}/human-*.tar"
+    )
+    run_record_human(args)
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "arena":
+        sys.argv.pop(1)
+        main_arena()
+    else:
+        main()

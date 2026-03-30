@@ -69,11 +69,13 @@ GAME_VARIABLES = [
     vzd.GameVariable.HITCOUNT, vzd.GameVariable.DAMAGECOUNT,
 ]
 
+# Note: do not add +viz_nocheat here — it blocks console commands such as addbot used for DM bots.
+# Sample Factory VizdoomEnvMultiplayer host args omit viz_nocheat for the same reason.
 DEATHMATCH_ARGS = (
     "+sv_forcerespawn 1 +sv_noautoaim 1 +sv_respawnprotect 1 "
     "+sv_spawnfarthest 1 +sv_nocrouch 1 +sv_nojump 1 "
     "+sv_nofreelook 1 +sv_noexit 1 "
-    "+viz_respawn_delay 0 +viz_nocheat 1"
+    "+viz_respawn_delay 0"
 )
 
 
@@ -326,6 +328,56 @@ def discover_checkpoints(experiment: str, train_dir: str) -> list:
     return sorted(checkpoints, key=lambda x: x[1])
 
 
+def _pth_numeric_sort_key(path: Path) -> tuple[int, ...]:
+    """Lexicographic ordering on integer runs in the filename (SF zero-padded names)."""
+    runs = [int(x) for x in re.findall(r"\d+", path.name)]
+    return tuple(runs) if runs else (0,)
+
+
+def select_checkpoint_path(experiment: str, train_dir: str, mode: str = "best") -> str:
+    """Pick one .pth for inference.
+
+    *best*: prefer files whose names include ``reward_<float>.pth``; take **highest** reward.
+    If none, prefer ``best_*.pth`` with largest numeric sort key. Avoids random mid-training
+    ``checkpoint_*.pth`` when reward-tagged bests exist.
+
+    *latest*: newest ``checkpoint_*.pth`` by numeric fields in the filename.
+    """
+    ckpt_dir = Path(train_dir) / experiment / "checkpoint_p0"
+    if not ckpt_dir.is_dir():
+        raise FileNotFoundError(f"No checkpoint directory: {ckpt_dir}")
+
+    all_files = list(ckpt_dir.glob("*.pth"))
+    if not all_files:
+        raise FileNotFoundError(f"No .pth files in {ckpt_dir}")
+
+    reward_suffix = re.compile(r"reward_([-\d.]+)\.pth$")
+    scored: list[tuple[Path, float]] = []
+    for f in all_files:
+        m = reward_suffix.search(f.name)
+        if m:
+            scored.append((f, float(m.group(1))))
+
+    if mode == "latest":
+        cks = [f for f in all_files if f.name.startswith("checkpoint_")]
+        if cks:
+            return str(max(cks, key=_pth_numeric_sort_key))
+        if scored:
+            return str(max((p for p, _ in scored), key=_pth_numeric_sort_key))
+        return str(max(all_files, key=_pth_numeric_sort_key))
+
+    # best
+    if scored:
+        max_r = max(r for _, r in scored)
+        tied = [p for p, r in scored if r == max_r]
+        return str(max(tied, key=_pth_numeric_sort_key))
+
+    bests = [f for f in all_files if f.name.startswith("best_")]
+    if bests:
+        return str(max(bests, key=_pth_numeric_sort_key))
+    return str(max(all_files, key=_pth_numeric_sort_key))
+
+
 def sample_checkpoint(checkpoints: list, temperature: float = 0.5) -> str:
     """Sample a checkpoint weighted by reward using softmax."""
     if not checkpoints:
@@ -569,10 +621,6 @@ def _play_multiplayer(
         print(f"[record] Init failed: host={errors[0]}, join={errors[1]}")
         return None
 
-    # Add bots (host only, after init but before new_episode)
-    for _ in range(num_bots):
-        host_game.send_game_command("addbot")
-
     # Start episodes via threads (new_episode() syncs between players)
     ep_errors = [None, None]
     def start_host_ep():
@@ -601,6 +649,12 @@ def _play_multiplayer(
                 pass
         print(f"[record] new_episode failed: host={ep_errors[0]}, join={ep_errors[1]}")
         return None
+
+    # Bots after new_episode: a fresh episode clears bots added earlier (see VizdoomEnvMultiplayer.reset).
+    if num_bots > 0:
+        host_game.send_game_command("removebots")
+        for _ in range(num_bots):
+            host_game.send_game_command("addbot")
 
     rnn_p1 = torch.zeros(1, rnn_size, device=device)
     rnn_p2 = torch.zeros(1, rnn_size, device=device)
