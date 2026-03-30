@@ -13,3 +13,4 @@ _vizdoom.ini
 preprocessing/*.html
 preprocessing/*.txt
 vizdoom-crash.log
+.env
