@@ -49,16 +49,58 @@ EVENT_LABELS = {
 
 
 def scan_annotations(data_root, ann_dir=None):
+    """Scan annotations, group by episode+player, return latest version of each.
+
+    Files follow the naming convention:
+      {episode_id}_{player}.json          (original, v0)
+      {episode_id}_{player}_v1.json       (first edit)
+      {episode_id}_{player}_v2.json       (second edit)
+      {episode_id}_{player}_edited.json   (legacy, treated as v1)
+    """
+    import re as _re
     if ann_dir is None:
         ann_dir = os.path.join(data_root, "annotations")
     if not os.path.isdir(ann_dir):
         return []
-    results = []
+
+    # Group files by (episode_id, player) → [(version_num, path, data)]
+    groups = {}
     for fname in sorted(os.listdir(ann_dir)):
         if not fname.endswith(".json"):
             continue
-        with open(os.path.join(ann_dir, fname)) as f:
-            results.append(json.load(f))
+        fpath = os.path.join(ann_dir, fname)
+        with open(fpath) as f:
+            data = json.load(f)
+        ep_id = data.get("episode_id", "")
+        player = data.get("player", "")
+        if not ep_id or not player:
+            continue
+
+        # Determine version number from filename
+        base = fname.removesuffix(".json")
+        m = _re.search(r"_v(\d+)$", base)
+        if m:
+            ver = int(m.group(1))
+        elif base.endswith("_edited"):
+            ver = 1  # legacy naming
+        else:
+            ver = 0  # original
+
+        key = (ep_id, player)
+        data["_version"] = ver
+        data["_filename"] = fname
+        groups.setdefault(key, []).append((ver, data))
+
+    # Pick latest version for each episode+player, attach version history
+    results = []
+    for key, versions in groups.items():
+        versions.sort(key=lambda x: x[0])
+        latest = versions[-1][1]
+        latest["_all_versions"] = [{"version": v, "filename": d["_filename"]} for v, d in versions]
+        latest["_next_version"] = versions[-1][0] + 1
+        results.append(latest)
+
+    results.sort(key=lambda a: (a.get("episode_id", ""), a.get("player", "")))
     return results
 
 
@@ -210,6 +252,9 @@ def generate_html(annotations, data_root, output_dir):
                 "annotated_at": ann.get("annotated_at", ""),
                 "meta": meta,
             },
+            "current_version": ann.get("_version", 0),
+            "next_version": ann.get("_next_version", 1),
+            "all_versions": ann.get("_all_versions", []),
         })
 
     # Serialize episode data for JS (without thumbs in the main JSON — too large)
@@ -732,6 +777,7 @@ function initEditor(ep, container) {{
         <button class="ev-btn ev-btn-dim" id="addBtn_${{vid_id}}" style="font-size:11px;padding:3px 10px">+ Add</button>
         <button class="ev-btn ev-btn-dim" id="saveBtn_${{vid_id}}" style="font-size:11px;padding:3px 10px">Save</button>
         <span id="dirty_${{vid_id}}" style="display:none;color:#ff4757;font-size:11px">unsaved</span>
+        <span id="verLabel_${{vid_id}}" style="font-size:11px;color:#888"></span>
         <span class="time-display">00:00.0 / ${{fmt(duration)}}</span>
     `;
     const zoomSlider = controlsBar.querySelector('.zoom-slider');
@@ -754,6 +800,7 @@ function initEditor(ep, container) {{
     function updateDirtyIndicator() {{
         const el = controlsBar.querySelector('#dirty_' + vid_id);
         el.style.display = state.dirty ? 'inline' : 'none';
+        if (typeof updateVersionLabel === 'function') updateVersionLabel();
     }}
 
     // --- Render ---
@@ -1056,18 +1103,38 @@ function initEditor(ep, container) {{
         addBtn.textContent = state.editMode === 'add' ? 'Cancel' : '+ Add';
         container.classList.toggle('add-mode-active', state.editMode === 'add');
     }});
+    // Version tracking
+    let saveVersion = ep.next_version || 1;
+    const verLabel = controlsBar.querySelector('#verLabel_' + vid_id);
+    function updateVersionLabel() {{
+        const cur = ep.current_version || 0;
+        const label = cur === 0 ? 'original' : 'v' + cur;
+        verLabel.textContent = state.dirty ? label + ' (editing)' : label;
+    }}
+    updateVersionLabel();
+
     controlsBar.querySelector('#saveBtn_' + vid_id).addEventListener('click', () => {{
         const data = buildAnnotationJSON();
-        const filename = ep.ep_id + '_' + ep.player + '_edited.json';
+        data.edit_version = saveVersion;
+        data.parent_version = ep.current_version || 0;
+        const filename = ep.ep_id + '_' + ep.player + '_v' + saveVersion + '.json';
+        const jsonStr = JSON.stringify(data, null, 2);
         if (window.showSaveFilePicker) {{
             (async () => {{
                 try {{
                     const h = await window.showSaveFilePicker({{ suggestedName: filename, types: [{{ accept: {{'application/json': ['.json']}} }}] }});
-                    const w = await h.createWritable(); await w.write(JSON.stringify(data, null, 2)); await w.close();
-                    state.dirty = false; updateDirtyIndicator();
-                }} catch(err) {{ if (err.name !== 'AbortError') downloadJSON(JSON.stringify(data, null, 2), filename); }}
+                    const w = await h.createWritable(); await w.write(jsonStr); await w.close();
+                    ep.current_version = saveVersion; saveVersion++;
+                    state.dirty = false; updateDirtyIndicator(); updateVersionLabel();
+                }} catch(err) {{ if (err.name !== 'AbortError') {{ downloadJSON(jsonStr, filename);
+                    ep.current_version = saveVersion; saveVersion++;
+                    state.dirty = false; updateDirtyIndicator(); updateVersionLabel(); }} }}
             }})();
-        }} else {{ downloadJSON(JSON.stringify(data, null, 2), filename); state.dirty = false; updateDirtyIndicator(); }}
+        }} else {{
+            downloadJSON(jsonStr, filename);
+            ep.current_version = saveVersion; saveVersion++;
+            state.dirty = false; updateDirtyIndicator(); updateVersionLabel();
+        }}
     }});
 
     // --- Scrubbing ---
