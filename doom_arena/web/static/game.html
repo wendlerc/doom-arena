@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doom Arena</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { overflow: hidden; }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="game-wrapper" id="game-wrapper">
+        <canvas id="game-canvas" width="640" height="480"></canvas>
+
+        <!-- Click to play overlay -->
+        <div class="click-overlay" id="click-overlay" onclick="requestPointerLock()">
+            <span>Click to Play</span>
+        </div>
+
+        <!-- HUD -->
+        <div class="hud" id="hud" style="display:none;">
+            <span class="hud-health" id="hud-health">HP: 100</span>
+            <span class="hud-frags" id="hud-frags">Frags: 0</span>
+            <span class="hud-deaths" id="hud-deaths">Deaths: 0</span>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="scoreboard" id="scoreboard">
+            <h2 id="scoreboard-title">Scores</h2>
+            <table>
+                <thead>
+                    <tr><th>Player</th><th>Type</th><th>Frags</th><th>Deaths</th></tr>
+                </thead>
+                <tbody id="scoreboard-body"></tbody>
+            </table>
+            <p id="scoreboard-info" style="text-align:center; margin-top:1rem; color:var(--text-dim);"></p>
+        </div>
+    </div>
+
+    <!-- Connection status -->
+    <div id="connection-status" class="status connecting" style="margin-top: 1rem;">
+        Connecting<span class="waiting"></span>
+    </div>
+</div>
+
+<script src="/static/game.js"></script>
+</body>
+</html>

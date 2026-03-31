@@ -15,6 +15,8 @@ dependencies = [
     "numpy",
     "torch",
     "webdataset",
+    "fastapi>=0.104",
+    "uvicorn[standard]>=0.24",
 ]
 
 [tool.hatch.metadata]
@@ -33,3 +35,4 @@ doom-download = "doom_arena.download_models:main"
 doom-record = "doom_arena.record:main"
 doom-record-human = "doom_arena.record_human:main"
 doom-record-human-arena = "doom_arena.record_human:main_arena"
+doom-web = "doom_arena.web.server:main"

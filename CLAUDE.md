@@ -28,6 +28,7 @@ doom-play --experiment my_run --num-bots 4          # Human-vs-AI multiplayer de
 doom-download                                       # Download pretrained models
 doom-record --experiment my_run --mode pvp --total-hours 10  # Record AI gameplay as WebDataset
 doom-record-human --experiment my_run --num-bots 4           # Record human-vs-AI as WebDataset
+doom-web --host 0.0.0.0 --port 8666                         # Web lobby: multi-human recorded deathmatch
 ```
 
 All Sample Factory CLI args pass through to `doom-train` (run `doom-train --help`). CLI args override the defaults set in `train.py`.
@@ -78,6 +79,14 @@ Records human-vs-AI gameplay. AI runs as multiplayer host (ASYNC_PLAYER, 160×12
 
 AI runs as multiplayer server (host) in a background thread via Sample Factory env wrappers. Human joins via a raw ViZDoom SPECTATOR mode window on localhost UDP. Bots added via `addbot` command on the host.
 
+### Web Recording Server (`doom_arena/web/`)
+
+Browser-based multiplayer lobby and recording server. Admin creates a game session via web UI (configures map, bots, time limit, episodes, optional AI players), shares a link with players. Multiple humans connect via browser, play simultaneously with WASD+mouse controls, and all gameplay is recorded to WebDataset shards.
+
+Architecture: ViZDoom runs **server-side** (headless, one instance per player + one host). Frames are JPEG-encoded and streamed to browsers via binary WebSocket (~35fps). Keyboard/mouse input captured via Pointer Lock API, sent back as binary messages, and translated to 14-float ViZDoom action vectors. All players' `make_action()` calls run concurrently via threads (same pattern as PvP recording). Disconnected players are replaced with engine bots. Auto-detects and launches Xvfb on headless servers.
+
+Modules: `server.py` (FastAPI + uvicorn), `session.py` (lobby state), `game_runner.py` (ViZDoom lifecycle + game loop), `input_mapping.py` (binary I/O protocol), `recorder.py` (WebDataset output). Frontend: `static/` (vanilla HTML/CSS/JS, no build tools). Recordings saved to `datasets/web_recordings/web-{session_id}.tar`.
+
 ### Data Pipeline for World Model Training
 
 ```
@@ -110,6 +119,7 @@ Encoding uses DC-AE-Lite model `mit-han-lab/dc-ae-lite-f32c32-sana-1.1-diffusers
 - **ViZDoom**: Doom engine bindings. WAD files located in `sf_examples/vizdoom/doom/scenarios/`.
 - **WebDataset**: tar-based sharded dataset format for recordings and latents.
 - **DC-AE-Lite**: Autoencoder for latent encoding (`mit-han-lab/dc-ae-lite-f32c32-sana-1.1-diffusers`).
+- **FastAPI + uvicorn**: Web server for `doom-web` multiplayer lobby.
 
 ## Conventions
 

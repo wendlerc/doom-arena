@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doom Arena - Lobby</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Doom Arena</h1>
+
+    <!-- Join Form (shown before connecting) -->
+    <div class="card" id="join-card">
+        <h2>Join Game</h2>
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label>Your Name</label>
+            <input type="text" id="player-name" placeholder="Enter your name" maxlength="15"
+                   onkeydown="if(event.key==='Enter') joinGame()">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="joinGame()">Join</button>
+    </div>
+
+    <!-- Lobby (shown after connecting) -->
+    <div class="card" id="lobby-card" style="display:none;">
+        <h2>Game Lobby</h2>
+
+        <!-- Session config info -->
+        <div id="config-info" style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.9rem;"></div>
+
+        <ul class="player-list" id="player-list"></ul>
+
+        <div id="status" class="status connecting">Waiting for players<span class="waiting"></span></div>
+
+        <!-- Admin controls -->
+        <div id="admin-controls" style="display:none; margin-top: 1.5rem;">
+            <button class="btn btn-success btn-block" id="start-btn" onclick="startGame()">
+                Start Game
+            </button>
+        </div>
+
+        <!-- Share link for non-admins -->
+        <div id="share-section" style="margin-top: 1.5rem;">
+            <label>Share this lobby</label>
+            <div class="share-box">
+                <input type="text" id="lobby-share-link" readonly>
+                <button class="btn-copy" onclick="copyLobbyLink()">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connecting to game... -->
+    <div class="card" id="starting-card" style="display:none;">
+        <div class="status connected">Game is starting<span class="waiting"></span></div>
+    </div>
+</div>
+
+<script src="/static/lobby.js"></script>
+</body>
+</html>

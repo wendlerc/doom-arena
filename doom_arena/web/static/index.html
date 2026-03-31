@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doom Arena - Create Game</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Doom Arena</h1>
+    <p class="subtitle">Multiplayer Deathmatch Recording Server</p>
+
+    <!-- Create Session Form -->
+    <div class="card" id="create-form">
+        <h2>Create Game Session</h2>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Map</label>
+                <select id="wad">
+                    <option value="dwango5.wad" data-map="map01">Dwango5 (Classic DM)</option>
+                    <option value="ssl2.wad" data-map="map01">SSL2 (Duel)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Time Limit (min)</label>
+                <input type="number" id="timelimit" value="5" min="1" max="30" step="1">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Engine Bots</label>
+                <input type="number" id="num_bots" value="4" min="0" max="8">
+            </div>
+            <div class="form-group">
+                <label>Max Human Players</label>
+                <input type="number" id="max_humans" value="4" min="1" max="8">
+            </div>
+            <div class="form-group">
+                <label>Episodes</label>
+                <input type="number" id="num_episodes" value="1" min="1" max="20">
+            </div>
+        </div>
+
+        <div class="toggle-row">
+            <input type="checkbox" id="add_ai" onchange="toggleAI()">
+            <label for="add_ai" style="margin-bottom:0">Add AI Player (trained model)</label>
+        </div>
+
+        <div class="ai-config" id="ai-config">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Experiment Name</label>
+                    <input type="text" id="ai_experiment" placeholder="e.g. seed0">
+                </div>
+                <div class="form-group">
+                    <label>Device</label>
+                    <select id="ai_device">
+                        <option value="cpu">CPU</option>
+                        <option value="cuda">CUDA</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="createSession()">
+            Create Session
+        </button>
+    </div>
+
+    <!-- Session Created Result -->
+    <div class="card session-result" id="session-result">
+        <h2>Session Created</h2>
+        <p style="color: var(--success); margin-bottom: 1rem;">
+            Share this link with players:
+        </p>
+        <div class="share-box">
+            <input type="text" id="join-link" readonly>
+            <button class="btn-copy" onclick="copyLink()">Copy</button>
+        </div>
+        <div class="share-box" style="margin-top: 0.5rem;">
+            <input type="text" id="admin-link" readonly>
+            <button class="btn-copy" onclick="copyAdminLink()">Copy (Admin)</button>
+        </div>
+        <p style="color: var(--text-dim); margin-top: 1rem; font-size: 0.85rem;">
+            The admin link lets you manage and start the game. Share the player link with others.
+        </p>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <a id="go-lobby-btn" class="btn btn-success" style="text-decoration:none; text-align:center; flex:1;">
+                Go to Lobby (Admin)
+            </a>
+            <button class="btn btn-primary" style="flex:1;" onclick="resetForm()">
+                Create Another
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="card" id="sessions-list" style="display:none;">
+        <h2>Active Sessions</h2>
+        <div id="sessions-container"></div>
+    </div>
+</div>
+
+<script>
+function toggleAI() {
+    const el = document.getElementById('ai-config');
+    el.classList.toggle('active', document.getElementById('add_ai').checked);
+}
+
+async function createSession() {
+    const wadSelect = document.getElementById('wad');
+    const selectedOption = wadSelect.options[wadSelect.selectedIndex];
+
+    const config = {
+        wad: wadSelect.value,
+        doom_map: selectedOption.dataset.map || 'map01',
+        timelimit: parseFloat(document.getElementById('timelimit').value),
+        num_bots: parseInt(document.getElementById('num_bots').value),
+        max_human_players: parseInt(document.getElementById('max_humans').value),
+        num_episodes: parseInt(document.getElementById('num_episodes').value),
+        ai_players: [],
+    };
+
+    if (document.getElementById('add_ai').checked) {
+        const experiment = document.getElementById('ai_experiment').value.trim();
+        if (experiment) {
+            config.ai_players.push({
+                name: 'AI_' + experiment,
+                experiment: experiment,
+                device: document.getElementById('ai_device').value,
+            });
+        }
+    }
+
+    try {
+        const resp = await fetch('/api/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config),
+        });
+        const data = await resp.json();
+
+        const base = window.location.origin;
+        document.getElementById('join-link').value = base + data.join_url;
+        document.getElementById('admin-link').value = base + data.admin_url;
+        document.getElementById('go-lobby-btn').href = data.admin_url;
+
+        document.getElementById('create-form').style.display = 'none';
+        document.getElementById('session-result').classList.add('active');
+    } catch (err) {
+        alert('Error creating session: ' + err.message);
+    }
+}
+
+function copyLink() {
+    const input = document.getElementById('join-link');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+}
+
+function copyAdminLink() {
+    const input = document.getElementById('admin-link');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+}
+
+function resetForm() {
+    document.getElementById('create-form').style.display = 'block';
+    document.getElementById('session-result').classList.remove('active');
+}
+
+// Load active sessions on page load
+async function loadSessions() {
+    try {
+        const resp = await fetch('/api/sessions');
+        const sessions = await resp.json();
+        const container = document.getElementById('sessions-container');
+        const listDiv = document.getElementById('sessions-list');
+
+        if (sessions.length === 0) {
+            listDiv.style.display = 'none';
+            return;
+        }
+
+        listDiv.style.display = 'block';
+        container.innerHTML = sessions.map(s => `
+            <div class="player-item">
+                <span class="player-name">${s.session_id}</span>
+                <span class="player-type ${s.state}">${s.state}</span>
+                <span style="color: var(--text-dim)">
+                    ${s.players.filter(p => p.type === 'human').length} players
+                </span>
+            </div>
+        `).join('');
+    } catch (e) {}
+}
+
+loadSessions();
+</script>
+</body>
+</html>
