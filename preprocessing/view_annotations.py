@@ -1052,11 +1052,9 @@ function initEditor(ep, container) {{
     // --- Event loop playback ---
     let loopEnd = null, loopRafId = null;
     function startEventLoop(s, e) {{
-        stopStepping();
-        loopEnd = e; video.currentTime = s;
-        startStepping();
+        video.pause(); loopEnd = e; video.currentTime = s; startPlayback();
     }}
-    function stopEventLoop() {{ loopEnd = null; stopStepping(); }}
+    function stopEventLoop() {{ loopEnd = null; stopPlayback(); }}
 
     // --- Resize event duration ---
     function startResize(e, ev, side, spanEl) {{
@@ -1113,7 +1111,7 @@ function initEditor(ep, container) {{
             stopEventLoop(); startEventLoop(Math.max(0, ev.start-0.5), ev.end+0.3);
         }});
         detailsPanel.querySelector('#playFromBtn').addEventListener('click', () => {{
-            stopStepping(); loopEnd = null; video.currentTime = ev.start; startStepping();
+            stopEventLoop(); video.currentTime = ev.start; startPlayback();
         }});
         detailsPanel.querySelector('#deleteEventBtn').addEventListener('click', () => {{
             if (!confirm('Delete this event?')) return;
@@ -1298,48 +1296,21 @@ function initEditor(ep, container) {{
 
     // --- Playhead + FPS control ---
     video.addEventListener('timeupdate', updatePlayhead);
-    let rafId, steppingTimer = null;
-    let targetFps = GAME_FPS;
-
-    fpsSelect.addEventListener('change', () => {{
-        targetFps = parseInt(fpsSelect.value);
-        // If currently playing, restart with new fps
-        if (!video.paused) {{
-            stopStepping();
-            startStepping();
-        }}
-    }});
-
-    function startStepping() {{
-        if (targetFps >= GAME_FPS) {{
-            // Native playback
-            video.playbackRate = 1.0;
-            video.play();
-            function tick() {{
-                updatePlayhead(); autoScroll();
-                if (!video.paused) rafId = requestAnimationFrame(tick);
-            }}
-            rafId = requestAnimationFrame(tick);
-        }} else {{
-            // Frame-stepping: pause native playback, advance by seeking
-            video.pause();
-            const frameStep = 1.0 / targetFps;
-            steppingTimer = setInterval(() => {{
-                if (video.currentTime >= duration) {{ stopStepping(); return; }}
-                // Check event loop end
-                if (loopEnd !== null && video.currentTime >= loopEnd) {{
-                    video.currentTime = loopEnd; stopStepping(); loopEnd = null;
-                    updatePlayhead(); return;
-                }}
-                video.currentTime = Math.min(video.currentTime + frameStep, duration);
-                updatePlayhead(); autoScroll();
-            }}, 1000 / targetFps);
-        }}
+    let rafId;
+    // FPS control: playbackRate = targetFps / nativeFps
+    // At 1fps: every frame still plays, just 35x slower
+    function applyFps() {{
+        const fps = parseInt(fpsSelect.value);
+        video.playbackRate = fps / GAME_FPS;
     }}
+    fpsSelect.addEventListener('change', applyFps);
+    applyFps();
 
-    function stopStepping() {{
-        if (rafId) cancelAnimationFrame(rafId);
-        if (steppingTimer) {{ clearInterval(steppingTimer); steppingTimer = null; }}
+    function startPlayback() {{
+        applyFps();
+        video.play();
+    }}
+    function stopPlayback() {{
         video.pause();
     }}
 
@@ -1349,24 +1320,20 @@ function initEditor(ep, container) {{
         if (ph > sr - 50 || ph < scrollContainer.scrollLeft + 120) scrollContainer.scrollLeft = ph - 200;
     }}
 
-    // Override native play/pause to go through stepping
-    video.addEventListener('play', (e) => {{
-        if (targetFps < GAME_FPS && !steppingTimer) {{
-            // User clicked native play button — redirect through stepping
-            e.preventDefault();
-            video.pause();
-            startStepping();
-        }} else if (targetFps >= GAME_FPS && !rafId) {{
-            function tick() {{
-                updatePlayhead(); autoScroll();
-                if (!video.paused) rafId = requestAnimationFrame(tick);
+    let rafId;
+    video.addEventListener('play', () => {{
+        function tick() {{
+            updatePlayhead(); autoScroll();
+            // Check event loop end
+            if (loopEnd !== null && video.currentTime >= loopEnd) {{
+                video.pause(); video.currentTime = loopEnd; loopEnd = null;
+                updatePlayhead(); return;
             }}
-            rafId = requestAnimationFrame(tick);
+            if (!video.paused) rafId = requestAnimationFrame(tick);
         }}
+        rafId = requestAnimationFrame(tick);
     }});
-    video.addEventListener('pause', () => {{
-        if (targetFps >= GAME_FPS) cancelAnimationFrame(rafId);
-    }});
+    video.addEventListener('pause', () => cancelAnimationFrame(rafId));
 
     // --- Assemble ---
     content.appendChild(ruler);
