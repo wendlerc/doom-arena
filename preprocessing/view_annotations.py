@@ -1296,7 +1296,6 @@ function initEditor(ep, container) {{
 
     // --- Playhead + FPS control ---
     video.addEventListener('timeupdate', updatePlayhead);
-    let rafId;
     // FPS control: playbackRate = targetFps / nativeFps
     // At 1fps: every frame still plays, just 35x slower
     function applyFps() {{
