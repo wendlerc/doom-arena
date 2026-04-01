@@ -166,6 +166,29 @@ def extract_thumbnails(shard_path, member_name, output_dir, ep_id, player, durat
     return thumbs
 
 
+def extract_actions(shard_path, members, player):
+    """Extract action array from shard. Returns list of 14-element lists, one per frame."""
+    import numpy as np
+    actions_key = f"actions_{player}.npy"
+    if actions_key not in members:
+        return []
+    with tarfile.open(shard_path, "r") as tar:
+        data = tar.extractfile(tar.getmember(members[actions_key])).read()
+    actions = np.load(io.BytesIO(data))  # (N, 14) float32
+    # Downsample to ~5fps to keep JS payload small (every 7th frame at 35fps)
+    step = max(1, GAME_FPS // 5)
+    downsampled = actions[::step]
+    # Convert to compact format: only store nonzero/significant values
+    # For binary buttons (0-12): round to 0/1
+    # For turn delta (13): round to 1 decimal
+    result = []
+    for row in downsampled:
+        compact = [int(round(row[i])) for i in range(13)]
+        compact.append(round(float(row[13]), 1))
+        result.append(compact)
+    return result
+
+
 def generate_html(annotations, data_root, output_dir):
     """Generate NLE-style HTML viewer."""
 
@@ -196,6 +219,19 @@ def generate_html(annotations, data_root, output_dir):
 
         print(f"  Extracting thumbnails for {ep_id[:12]}... {player}")
         thumbs = extract_thumbnails(shard, ep_key_prefix, output_dir, ep_id, player, duration)
+
+        # Extract action data for overlay
+        tar_members = {}
+        try:
+            with tarfile.open(shard, "r") as tar:
+                for m in tar.getnames():
+                    parts = m.split(".", 1)
+                    if len(parts) == 2:
+                        tar_members[parts[1]] = m
+        except Exception:
+            pass
+        actions_data = extract_actions(shard, tar_members, player)
+        print(f"    Actions: {len(actions_data)} samples (downsampled to ~5fps)")
 
         # Build track data
         tracks_data = {}
@@ -252,6 +288,7 @@ def generate_html(annotations, data_root, output_dir):
                 "annotated_at": ann.get("annotated_at", ""),
                 "meta": meta,
             },
+            "actions": actions_data,
             "current_version": ann.get("_version", 0),
             "next_version": ann.get("_next_version", 1),
             "all_versions": ann.get("_all_versions", []),
@@ -261,17 +298,22 @@ def generate_html(annotations, data_root, output_dir):
     # Instead, embed thumbs as a separate JS array per episode
     episodes_json_list = []
     thumbs_js_parts = []
+    actions_js_parts = []
     for ep in episodes_data:
-        ep_copy = {k: v for k, v in ep.items() if k != "thumbs"}
+        ep_copy = {k: v for k, v in ep.items() if k not in ("thumbs", "actions")}
         episodes_json_list.append(ep_copy)
         thumbs_js_parts.append(
             f'THUMBS["{ep["vid_id"]}"] = {json.dumps(ep["thumbs"])};'
+        )
+        actions_js_parts.append(
+            f'ACTIONS["{ep["vid_id"]}"] = {json.dumps(ep["actions"])};'
         )
 
     episodes_json = json.dumps(episodes_json_list)
     colors_json = json.dumps(EVENT_COLORS)
     labels_json = json.dumps(EVENT_LABELS)
     thumbs_js = "\n".join(thumbs_js_parts)
+    actions_js = "\n".join(actions_js_parts)
 
     # Build tab HTML
     tabs_html = ""
@@ -393,11 +435,42 @@ body {{
     justify-content: center;
     background: #000;
     min-width: 0;
+    position: relative;
 }}
 .player-panel video {{
     max-width: 100%;
     max-height: 100%;
     display: block;
+}}
+.action-overlay {{
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-family: 'Consolas', 'SF Mono', monospace;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.3;
+    color: #fff;
+    text-shadow: 0 0 4px #000, 0 0 8px #000, 1px 1px 2px #000;
+    pointer-events: none;
+    text-align: right;
+    white-space: pre;
+    z-index: 5;
+    background: rgba(0,0,0,0.35);
+    padding: 6px 10px;
+    border-radius: 6px;
+}}
+.action-overlay .act-active {{
+    color: #ff4757;
+}}
+.action-overlay .act-move {{
+    color: #2ed573;
+}}
+.action-overlay .act-weapon {{
+    color: #ffa502;
+}}
+.action-overlay .act-turn {{
+    color: #70a1ff;
 }}
 
 /* --- Timeline area --- */
@@ -703,6 +776,10 @@ const COLORS = {colors_json};
 const LABELS = {labels_json};
 const THUMBS = {{}};
 {thumbs_js}
+const ACTIONS = {{}};
+{actions_js}
+const ACTION_STEP = {max(1, GAME_FPS // 5)};  // frames between action samples
+const ACTION_LABELS = ['FWD','BACK','RIGHT','LEFT','W1','W2','W3','W4','W5','W6','W7','ATK','SPD','TURN'];
 const THUMB_W = {THUMB_W};
 const THUMB_INTERVAL = {THUMB_INTERVAL};
 const GAME_FPS = {GAME_FPS};
@@ -762,8 +839,45 @@ function initEditor(ep, container) {{
     video.controls = true;
     video.innerHTML = '<source src="' + ep.video_filename + '" type="video/mp4">';
     playerPanel.appendChild(video);
+    const actionOverlay = document.createElement('div');
+    actionOverlay.className = 'action-overlay';
+    playerPanel.appendChild(actionOverlay);
     topRow.appendChild(detailsPanel);
     topRow.appendChild(playerPanel);
+
+    // Action overlay update
+    const actionsArr = ACTIONS[vid_id] || [];
+    const WEAPON_NAMES = ['','Fist','Pistol','Shotgun','SSG','Chaingun','Rocket','Plasma'];
+    function updateActionOverlay() {{
+        if (!actionsArr.length) return;
+        const frame = Math.round(video.currentTime * GAME_FPS);
+        const idx = Math.min(Math.floor(frame / ACTION_STEP), actionsArr.length - 1);
+        if (idx < 0) return;
+        const a = actionsArr[idx];
+        const lines = [];
+        // Movement
+        const moves = [];
+        if (a[0]) moves.push('FWD');
+        if (a[1]) moves.push('BACK');
+        if (a[2]) moves.push('RIGHT');
+        if (a[3]) moves.push('LEFT');
+        if (moves.length) lines.push('<span class="act-move">' + moves.join(' ') + '</span>');
+        // Weapon select
+        for (let w = 0; w < 7; w++) {{
+            if (a[4+w]) lines.push('<span class="act-weapon">SEL ' + WEAPON_NAMES[w+1] + '</span>');
+        }}
+        // Attack & speed
+        const combat = [];
+        if (a[11]) combat.push('ATTACK');
+        if (a[12]) combat.push('SPEED');
+        if (combat.length) lines.push('<span class="act-active">' + combat.join(' ') + '</span>');
+        // Turn
+        if (Math.abs(a[13]) > 0.5) {{
+            const dir = a[13] > 0 ? 'TURN R' : 'TURN L';
+            lines.push('<span class="act-turn">' + dir + ' ' + Math.abs(a[13]).toFixed(1) + '</span>');
+        }}
+        actionOverlay.innerHTML = lines.join('\\n') || '<span style="opacity:0.3">idle</span>';
+    }}
 
     const timelineArea = document.createElement('div');
     timelineArea.className = 'timeline-area';
@@ -904,6 +1018,7 @@ function initEditor(ep, container) {{
         const t = video.currentTime || 0;
         playhead.style.left = timeToPx(t) + 'px';
         timeDisplay.textContent = fmt(t) + ' / ' + fmt(duration);
+        updateActionOverlay();
     }}
 
     // --- Tooltip ---
