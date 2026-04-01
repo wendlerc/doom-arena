@@ -167,7 +167,12 @@ def extract_thumbnails(shard_path, member_name, output_dir, ep_id, player, durat
 
 
 def extract_actions(shard_path, members, player):
-    """Extract action array from shard. Returns list of 14-element lists, one per frame."""
+    """Extract action array from shard, max-pooled to ~5fps.
+
+    Uses max-pooling (not point-sampling) over each window so short
+    button presses (e.g., a 3-frame attack burst) are never missed.
+    For the turn delta (continuous), uses the value with the largest magnitude.
+    """
     import numpy as np
     actions_key = f"actions_{player}.npy"
     if actions_key not in members:
@@ -175,16 +180,18 @@ def extract_actions(shard_path, members, player):
     with tarfile.open(shard_path, "r") as tar:
         data = tar.extractfile(tar.getmember(members[actions_key])).read()
     actions = np.load(io.BytesIO(data))  # (N, 14) float32
-    # Downsample to ~5fps to keep JS payload small (every 7th frame at 35fps)
     step = max(1, GAME_FPS // 5)
-    downsampled = actions[::step]
-    # Convert to compact format: only store nonzero/significant values
-    # For binary buttons (0-12): round to 0/1
-    # For turn delta (13): round to 1 decimal
+    n = len(actions)
     result = []
-    for row in downsampled:
-        compact = [int(round(row[i])) for i in range(13)]
-        compact.append(round(float(row[13]), 1))
+    for start in range(0, n, step):
+        window = actions[start:start + step]
+        # Binary buttons (0-12): max over window — if pressed at all, show it
+        buttons = window[:, :13].max(axis=0)
+        compact = [int(round(buttons[i])) for i in range(13)]
+        # Turn delta (13): pick the value with largest abs magnitude
+        turns = window[:, 13]
+        max_idx = np.argmax(np.abs(turns))
+        compact.append(round(float(turns[max_idx]), 1))
         result.append(compact)
     return result
 
