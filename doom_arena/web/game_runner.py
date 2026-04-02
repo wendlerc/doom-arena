@@ -343,6 +343,8 @@ class GameRunner:
                 ep_data = self._game_loop(joiners)
 
                 if ep_data:
+                    # Eagerly encode video to free raw frame memory (~9.6 GB/episode)
+                    self._encode_episode_videos(ep_data)
                     self.episode_recordings.append(ep_data)
 
                 # Broadcast scores
@@ -656,6 +658,24 @@ class GameRunner:
 
         for t in threads:
             t.join(timeout=10)
+
+    def _encode_episode_videos(self, ep_data: dict):
+        """Encode raw frame arrays to MP4 bytes immediately, freeing memory.
+
+        Without this, 4 episodes at 640x480 would accumulate ~38 GB of raw
+        numpy arrays before the recording is saved at the end.
+        """
+        if not ep_data or "players" not in ep_data:
+            return
+        for slot_id, pdata in ep_data["players"].items():
+            frames = pdata.get("frames", [])
+            if frames:
+                logger.info(
+                    f"Encoding video for player {pdata.get('name', slot_id)}: "
+                    f"{len(frames)} frames"
+                )
+                pdata["video_bytes"] = encode_video(frames, fps=GAME_FPS)
+                pdata["frames"] = []  # free raw numpy arrays
 
     def _build_scores(self) -> list[dict]:
         """Build scores list from current player stats."""

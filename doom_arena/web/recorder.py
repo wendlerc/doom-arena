@@ -73,11 +73,15 @@ def save_session_recording(
                 for p_idx, (slot_id, pdata) in enumerate(sorted(ep_data["players"].items()), start=1):
                     suffix = f"p{p_idx}"
 
-                    # Video
-                    frames = pdata.get("frames", [])
-                    if frames:
-                        video_bytes = encode_video(frames, fps=GAME_FPS)
+                    # Video (prefer pre-encoded bytes from GameRunner)
+                    video_bytes = pdata.get("video_bytes")
+                    if video_bytes:
                         sample[f"video_{suffix}.mp4"] = video_bytes
+                    else:
+                        frames = pdata.get("frames", [])
+                        if frames:
+                            video_bytes = encode_video(frames, fps=GAME_FPS)
+                            sample[f"video_{suffix}.mp4"] = video_bytes
 
                     # Actions
                     actions = pdata.get("actions")
