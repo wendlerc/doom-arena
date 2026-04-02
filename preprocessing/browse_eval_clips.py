@@ -158,6 +158,7 @@ def generate_html():
         "attack_not_firing": "#3498db",
         "kill": "#ff4757",
         "death_respawn": "#c0392b",
+        "weapon_pickup": "#27ae60",
     }
     colors_json = json.dumps(cat_colors)
 
@@ -253,7 +254,7 @@ textarea.edit-field {{ resize: vertical; min-height: 50px; }}
 
 <script>
 const CAT_COLORS = {colors_json};
-const ALL_CATEGORIES = ['weapon_switch','attack_firing','attack_not_firing','kill','death_respawn'];
+const ALL_CATEGORIES = ['weapon_switch','attack_firing','attack_not_firing','kill','death_respawn','weapon_pickup'];
 
 let CLIPS = [];
 let activeFilters = new Set();
@@ -345,6 +346,7 @@ function renderList() {{
         else if (clip.category === 'attack_not_firing') desc = (gt.weapon_type||'?') + ' (idle)';
         else if (clip.category === 'kill') desc = gt.description || 'frag';
         else if (clip.category === 'death_respawn') desc = gt.description || gt.event_type || '';
+        else if (clip.category === 'weapon_pickup') desc = gt.weapon_picked_up || '?';
         if (clip.notes) desc = '[note] ' + desc;
 
         item.innerHTML = `
