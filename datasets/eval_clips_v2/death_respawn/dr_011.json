@@ -1,0 +1,25 @@
+{
+  "clip_id": "dr_011",
+  "category": "death_respawn",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 7277,
+  "frame_end": 7347,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "death",
+    "description": "Player's health dropped to 1% after taking sustained damage from an enemy player, resulting in death.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "03:28.9",
+    "event_type": "death",
+    "description": "Player's health dropped to 1% after taking sustained damage from an enemy player, resulting in death.",
+    "details": {},
+    "confidence": 0.9
+  }
+}

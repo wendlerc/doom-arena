@@ -1,0 +1,25 @@
+{
+  "clip_id": "dr_009",
+  "category": "death_respawn",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 0,
+  "frame_end": 35,
+  "duration_frames": 36,
+  "duration_sec": 1.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player character respawns with a bright yellow and green teleport effect. The player appears at a new location, starts with 100% health, and the pistol as the active weapon.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "00:00.0",
+    "event_type": "respawn",
+    "description": "Player character respawns with a bright yellow and green teleport effect. The player appears at a new location, starts with 100% health, and the pistol as the active weapon.",
+    "details": {},
+    "confidence": 0.95
+  }
+}

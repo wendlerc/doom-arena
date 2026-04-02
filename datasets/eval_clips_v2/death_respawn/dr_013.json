@@ -1,0 +1,29 @@
+{
+  "clip_id": "dr_013",
+  "category": "death_respawn",
+  "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000003.tar",
+  "frame_start": 1067,
+  "frame_end": 1137,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player respawns with a bright green teleport effect, appearing in a new indoor location. Player's health is reset to 100%, armor to 50%, and the pistol is equipped.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "00:31.5",
+    "event_type": "respawn",
+    "description": "Player respawns with a bright green teleport effect, appearing in a new indoor location. Player's health is reset to 100%, armor to 50%, and the pistol is equipped.",
+    "details": {
+      "initial_health": 100,
+      "initial_armor": 50,
+      "weapon_equipped": "pistol"
+    },
+    "confidence": 1.0
+  }
+}

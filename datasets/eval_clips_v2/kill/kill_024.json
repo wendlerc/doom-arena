@@ -1,0 +1,28 @@
+{
+  "clip_id": "kill_024",
+  "category": "kill",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 5656,
+  "frame_end": 5726,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Player kills a green Zombieman/Marine. The enemy falls to the ground after being shot. (A frag message in the top-left corner was not visible in this frame sequence).",
+    "weapon_used": "Pistol"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "02:42.6",
+    "event_type": "kill",
+    "description": "Player kills a green Zombieman/Marine. The enemy falls to the ground after being shot. (A frag message in the top-left corner was not visible in this frame sequence).",
+    "details": {
+      "enemy_type": "Zombieman/Marine",
+      "weapon_used": "Pistol",
+      "player_ammo_change": "157 -> 156"
+    },
+    "confidence": 0.8
+  }
+}

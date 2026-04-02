@@ -1,0 +1,25 @@
+{
+  "clip_id": "ws_chainsaw_001",
+  "category": "weapon_switch",
+  "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000000.tar",
+  "frame_start": 5736,
+  "frame_end": 5806,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_from": "SHOTGUN",
+    "weapon_to": "CHAINSAW",
+    "switch_frame_before": 5763,
+    "switch_frame_after": 5780
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_from_matches": true,
+    "weapon_to_matches": true,
+    "confidence": 1.0
+  }
+}

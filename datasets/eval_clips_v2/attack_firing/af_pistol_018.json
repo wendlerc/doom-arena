@@ -1,0 +1,23 @@
+{
+  "clip_id": "af_pistol_018",
+  "category": "attack_firing",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 9304,
+  "frame_end": 9374,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_type": "PISTOL"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_matches": true,
+    "firing_visible": true,
+    "evidence": "The pistol in the 'Gameplay during ATTACK' frames is identical to the reference pistol. In the final frame of the attack sequence, a clear muzzle flash is visible emanating from the barrel of the pistol.",
+    "confidence": 1.0
+  }
+}

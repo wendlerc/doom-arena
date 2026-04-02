@@ -1,7 +1,8 @@
 sf_train_dir/
 results/
 recordings/
-datasets/
+datasets/*
+!datasets/eval_clips_v2
 wandb/
 logs/
 .venv/

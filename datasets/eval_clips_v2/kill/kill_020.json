@@ -1,0 +1,24 @@
+{
+  "clip_id": "kill_020",
+  "category": "kill",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 3525,
+  "frame_end": 3595,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Enemy player killed by shotgun blast.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "01:41.7",
+    "event_type": "kill",
+    "description": "Enemy player killed by shotgun blast.",
+    "details": {},
+    "confidence": 0.9
+  }
+}

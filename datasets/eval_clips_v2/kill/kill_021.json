@@ -1,0 +1,24 @@
+{
+  "clip_id": "kill_021",
+  "category": "kill",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 4368,
+  "frame_end": 4438,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Player kills a Zombieman (shotgun guy) with the Super Shotgun. The enemy explodes into gibs, and the player's Super Shotgun ammo count decreases from 38 to 36.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "02:05.8",
+    "event_type": "kill",
+    "description": "Player kills a Zombieman (shotgun guy) with the Super Shotgun. The enemy explodes into gibs, and the player's Super Shotgun ammo count decreases from 38 to 36.",
+    "details": {},
+    "confidence": 0.9
+  }
+}

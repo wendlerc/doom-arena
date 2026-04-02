@@ -1,0 +1,23 @@
+{
+  "clip_id": "af_super_shotgun_029",
+  "category": "attack_firing",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 9843,
+  "frame_end": 9913,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_type": "SUPER_SHOTGUN"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_matches": true,
+    "firing_visible": true,
+    "evidence": "The weapon in the gameplay frames is the Super Shotgun, matching the reference. Muzzle flash is visible in frames 3-4, and weapon recoil is evident throughout frames 3-5. The ammo count also decreases from 38 to 36, consistent with the Super Shotgun's two-shell per shot usage.",
+    "confidence": 1.0
+  }
+}

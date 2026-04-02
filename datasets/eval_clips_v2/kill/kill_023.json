@@ -1,0 +1,24 @@
+{
+  "clip_id": "kill_023",
+  "category": "kill",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 5113,
+  "frame_end": 5183,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Another enemy (Zombieman) eliminated by rocket launcher fire, resulting in gibs. No frag message visible in top-left corner.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "02:27.1",
+    "event_type": "kill",
+    "description": "Another enemy (Zombieman) eliminated by rocket launcher fire, resulting in gibs. No frag message visible in top-left corner.",
+    "details": {},
+    "confidence": 0.9
+  }
+}

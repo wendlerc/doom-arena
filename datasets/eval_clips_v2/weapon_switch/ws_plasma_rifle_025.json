@@ -1,0 +1,25 @@
+{
+  "clip_id": "ws_plasma_rifle_025",
+  "category": "weapon_switch",
+  "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000003.tar",
+  "frame_start": 3458,
+  "frame_end": 3528,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_from": "SHOTGUN",
+    "weapon_to": "PLASMA_RIFLE",
+    "switch_frame_before": 3485,
+    "switch_frame_after": 3502
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_from_matches": true,
+    "weapon_to_matches": true,
+    "confidence": 1.0
+  }
+}

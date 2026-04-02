@@ -1,0 +1,29 @@
+{
+  "clip_id": "dr_008",
+  "category": "death_respawn",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 9601,
+  "frame_end": 9671,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "The player respawned, evidenced by a bright green and yellow teleportation flash, an immediate change to a new indoor environment from the previous outdoor area, health being reset to 100%, and the default pistol being in hand with 50 bullets.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "04:35.3",
+    "event_type": "respawn",
+    "description": "The player respawned, evidenced by a bright green and yellow teleportation flash, an immediate change to a new indoor environment from the previous outdoor area, health being reset to 100%, and the default pistol being in hand with 50 bullets.",
+    "details": {
+      "health_after_respawn": "100%",
+      "ammo_after_respawn": "50 (pistol bullets)",
+      "weapon_after_respawn": "pistol"
+    },
+    "confidence": 1.0
+  }
+}

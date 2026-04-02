@@ -1,0 +1,25 @@
+{
+  "clip_id": "dr_012",
+  "category": "death_respawn",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 7283,
+  "frame_end": 7353,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player respawned via a bright green circular teleport effect in a new indoor location, with a pistol equipped, 50% health, and 100% armor.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "03:29.1",
+    "event_type": "respawn",
+    "description": "Player respawned via a bright green circular teleport effect in a new indoor location, with a pistol equipped, 50% health, and 100% armor.",
+    "details": {},
+    "confidence": 1.0
+  }
+}

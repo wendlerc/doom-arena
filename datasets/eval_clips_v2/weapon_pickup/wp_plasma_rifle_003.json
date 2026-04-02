@@ -1,0 +1,24 @@
+{
+  "clip_id": "wp_plasma_rifle_003",
+  "category": "weapon_pickup",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 1860,
+  "frame_end": 1930,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_picked_up": "PLASMA_RIFLE",
+    "pickup_frame_before": 1887,
+    "pickup_frame_after": 1904
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "pickup_visible": false,
+    "weapon_matches_ref": true,
+    "confidence": 0.9
+  }
+}

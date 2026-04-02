@@ -1,0 +1,25 @@
+{
+  "clip_id": "dr_010",
+  "category": "death_respawn",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 5131,
+  "frame_end": 5201,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player respawns at a new location with the pistol equipped.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "02:27.6",
+    "event_type": "respawn",
+    "description": "Player respawns at a new location with the pistol equipped.",
+    "details": {},
+    "confidence": 1.0
+  }
+}

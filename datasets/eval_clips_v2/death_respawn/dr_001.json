@@ -1,0 +1,25 @@
+{
+  "clip_id": "dr_001",
+  "category": "death_respawn",
+  "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000000.tar",
+  "frame_start": 168,
+  "frame_end": 238,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player respawns again with the pistol in hand, indicated by the bright green/yellow teleportation effect and starting HUD stats (50 ammo, 100% health, 0% arms, 1% kill tally in the next frame).",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "00:05.8",
+    "event_type": "respawn",
+    "description": "Player respawns again with the pistol in hand, indicated by the bright green/yellow teleportation effect and starting HUD stats (50 ammo, 100% health, 0% arms, 1% kill tally in the next frame).",
+    "details": {},
+    "confidence": 1.0
+  }
+}

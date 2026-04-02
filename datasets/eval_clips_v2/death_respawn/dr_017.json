@@ -1,0 +1,31 @@
+{
+  "clip_id": "dr_017",
+  "category": "death_respawn",
+  "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000003.tar",
+  "frame_start": 8484,
+  "frame_end": 8554,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player respawned at a new location with 100% health. The environment changed from an indoor corridor to a darker area leading to an outdoor segment, and the weapon switched to the pistol (visible at 04:03.9) with full starting ammo.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "04:03.4",
+    "event_type": "respawn",
+    "description": "Player respawned at a new location with 100% health. The environment changed from an indoor corridor to a darker area leading to an outdoor segment, and the weapon switched to the pistol (visible at 04:03.9) with full starting ammo.",
+    "details": {
+      "health_after": "100%",
+      "ammo_after": "99 (pistol)",
+      "weapon_after": "Pistol",
+      "location_change": true,
+      "teleport_effect_visible": false
+    },
+    "confidence": 0.9
+  }
+}

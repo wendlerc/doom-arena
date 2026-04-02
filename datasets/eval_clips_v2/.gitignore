@@ -1,0 +1,5 @@
+**/*.mp4
+**/*.npy
+index.json.bak.*
+_deleted/
+reference_frames/*.jpg

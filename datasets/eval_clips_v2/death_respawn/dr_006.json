@@ -1,0 +1,30 @@
+{
+  "clip_id": "dr_006",
+  "category": "death_respawn",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 4827,
+  "frame_end": 4897,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player respawns in a new location, indicated by a bright green and yellow circular teleportation effect. The player's health is reset to 50% and armor to 0%, and they are holding a shotgun.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "02:18.9",
+    "event_type": "respawn",
+    "description": "Player respawns in a new location, indicated by a bright green and yellow circular teleportation effect. The player's health is reset to 50% and armor to 0%, and they are holding a shotgun.",
+    "details": {
+      "new_location": true,
+      "starting_health": 50,
+      "starting_armor": 0,
+      "starting_weapon": "shotgun"
+    },
+    "confidence": 1.0
+  }
+}

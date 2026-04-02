@@ -1,0 +1,24 @@
+{
+  "clip_id": "kill_003",
+  "category": "kill",
+  "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000000.tar",
+  "frame_start": 7199,
+  "frame_end": 7269,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Green soldier enemy killed by player's shotgun. The enemy disappears and an armor bonus pickup is left behind. No frag message is visible in the top-left corner.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "03:26.7",
+    "event_type": "kill",
+    "description": "Green soldier enemy killed by player's shotgun. The enemy disappears and an armor bonus pickup is left behind. No frag message is visible in the top-left corner.",
+    "details": {},
+    "confidence": 0.9
+  }
+}

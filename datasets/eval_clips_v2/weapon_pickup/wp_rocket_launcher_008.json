@@ -1,0 +1,26 @@
+{
+  "clip_id": "wp_rocket_launcher_008",
+  "category": "weapon_pickup",
+  "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000003.tar",
+  "frame_start": 908,
+  "frame_end": 978,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_picked_up": "ROCKET_LAUNCHER",
+    "pickup_frame_before": 935,
+    "pickup_frame_after": 952
+  },
+  "gemini_verified": false,
+  "gemini_response": {
+    "verified": true,
+    "pickup_visible": true,
+    "weapon_matches_ref": true,
+    "confidence": 1.0
+  },
+  "notes": " [marked bad]",
+  "edited_at": "2026-04-02T15:40:20"
+}

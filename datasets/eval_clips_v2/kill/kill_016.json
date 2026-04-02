@@ -1,0 +1,28 @@
+{
+  "clip_id": "kill_016",
+  "category": "kill",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 1187,
+  "frame_end": 1257,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "An enemy marine is killed and gibbed by a rocket explosion. The player's frag count increases from 0 to 1.",
+    "weapon_used": "rocket launcher"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "00:34.9",
+    "event_type": "kill",
+    "description": "An enemy marine is killed and gibbed by a rocket explosion. The player's frag count increases from 0 to 1.",
+    "details": {
+      "enemy_type": "marine",
+      "weapon_used": "rocket launcher",
+      "frag_count_after_kill": 1
+    },
+    "confidence": 1.0
+  }
+}

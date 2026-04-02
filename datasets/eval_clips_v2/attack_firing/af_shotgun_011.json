@@ -1,0 +1,23 @@
+{
+  "clip_id": "af_shotgun_011",
+  "category": "attack_firing",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 4789,
+  "frame_end": 4859,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_type": "SHOTGUN"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_matches": true,
+    "firing_visible": true,
+    "evidence": "The weapon sprite in the 'Gameplay during ATTACK' frames is identical to the 'Reference (SHOTGUN)' sprite. During the attack sequence, a muzzle flash is clearly visible on the shotgun barrel in frames 2, 3, and 4. The weapon sprite shows distinct recoil and the pump action of the shotgun in frames 3, 4, and 5. The 'SHELL' ammo count also decrements from 40 to 39 after the first shot and then to 38, indicating ammunition consumption.",
+    "confidence": 1.0
+  }
+}

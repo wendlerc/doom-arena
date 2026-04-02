@@ -1,0 +1,24 @@
+{
+  "clip_id": "kill_000",
+  "category": "kill",
+  "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000000.tar",
+  "frame_start": 2643,
+  "frame_end": 2713,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "An Imp is gibbed by the player's super shotgun shot fired at 01:16.0.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "01:16.5",
+    "event_type": "kill",
+    "description": "An Imp is gibbed by the player's super shotgun shot fired at 01:16.0.",
+    "details": {},
+    "confidence": 1.0
+  }
+}

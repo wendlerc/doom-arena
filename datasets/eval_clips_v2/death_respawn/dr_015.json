@@ -1,0 +1,28 @@
+{
+  "clip_id": "dr_015",
+  "category": "death_respawn",
+  "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000003.tar",
+  "frame_start": 8281,
+  "frame_end": 8351,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "death",
+    "description": "Player's health drops to 0%, face icon shows death, and the score table confirms player (P1) was killed by 'HUMAN Sg'.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "03:57.6",
+    "event_type": "death",
+    "description": "Player's health drops to 0%, face icon shows death, and the score table confirms player (P1) was killed by 'HUMAN Sg'.",
+    "details": {
+      "killer": "HUMAN Sg",
+      "player_health_before_death": "5%"
+    },
+    "confidence": 1.0
+  }
+}

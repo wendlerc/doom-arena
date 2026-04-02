@@ -1,0 +1,24 @@
+{
+  "clip_id": "kill_017",
+  "category": "kill",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 1607,
+  "frame_end": 1677,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Player kills an Imp with the Super Shotgun. The frag count increases from 1 to 2.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "00:46.9",
+    "event_type": "kill",
+    "description": "Player kills an Imp with the Super Shotgun. The frag count increases from 1 to 2.",
+    "details": {},
+    "confidence": 1.0
+  }
+}

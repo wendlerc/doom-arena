@@ -1,0 +1,29 @@
+{
+  "clip_id": "dr_016",
+  "category": "death_respawn",
+  "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000003.tar",
+  "frame_start": 8299,
+  "frame_end": 8369,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Screen flashes bright green, player reappears at a new location with 50% health, 100% armor, and a pistol equipped.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "03:58.1",
+    "event_type": "respawn",
+    "description": "Screen flashes bright green, player reappears at a new location with 50% health, 100% armor, and a pistol equipped.",
+    "details": {
+      "initial_health": "50%",
+      "initial_armor": "100%",
+      "weapon": "pistol"
+    },
+    "confidence": 1.0
+  }
+}

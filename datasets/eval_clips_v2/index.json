@@ -1,0 +1,3453 @@
+{
+  "total_clips": 141,
+  "categories": {
+    "weapon_switch": 24,
+    "death_respawn": 20,
+    "weapon_pickup": 13,
+    "attack_firing": 30,
+    "attack_not_firing": 30,
+    "kill": 24
+  },
+  "model": "gemini-2.5-flash",
+  "seed": 42,
+  "weapon_references": [
+    "CHAINGUN",
+    "CHAINSAW",
+    "FIST",
+    "PISTOL",
+    "PLASMA_RIFLE",
+    "ROCKET_LAUNCHER",
+    "SHOTGUN",
+    "SUPER_SHOTGUN"
+  ],
+  "timestamp": "2026-04-02T14:27:44",
+  "clips": [
+    {
+      "clip_id": "ws_chainsaw_000",
+      "category": "weapon_switch",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 8779,
+      "frame_end": 8849,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "PISTOL",
+        "weapon_to": "CHAINSAW",
+        "switch_frame_before": 8806,
+        "switch_frame_after": 8823
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_chainsaw_001",
+      "category": "weapon_switch",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 5736,
+      "frame_end": 5806,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SHOTGUN",
+        "weapon_to": "CHAINSAW",
+        "switch_frame_before": 5763,
+        "switch_frame_after": 5780
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_pistol_002",
+      "category": "death_respawn",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 670,
+      "frame_end": 740,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SUPER_SHOTGUN",
+        "weapon_to": "PISTOL",
+        "switch_frame_before": 680,
+        "switch_frame_after": 731
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:52:10"
+    },
+    {
+      "clip_id": "ws_rocket_launcher_003",
+      "category": "weapon_switch",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 2421,
+      "frame_end": 2491,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SUPER_SHOTGUN",
+        "weapon_to": "ROCKET_LAUNCHER",
+        "switch_frame_before": 2448,
+        "switch_frame_after": 2465
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:50:06"
+    },
+    {
+      "clip_id": "ws_shotgun_004",
+      "category": "weapon_switch",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 5694,
+      "frame_end": 5764,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "CHAINSAW",
+        "weapon_to": "PISTOL",
+        "switch_frame_before": 5712,
+        "switch_frame_after": 5746
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      },
+      "edited_at": "2026-04-02T14:50:21"
+    },
+    {
+      "clip_id": "ws_shotgun_005",
+      "category": "weapon_switch",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 8864,
+      "frame_end": 8934,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "CHAINSAW",
+        "weapon_to": "ROCKET_LAUNCHER",
+        "switch_frame_before": 8891,
+        "switch_frame_after": 8908
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      },
+      "edited_at": "2026-04-02T14:50:38"
+    },
+    {
+      "clip_id": "ws_chaingun_006",
+      "category": "weapon_pickup",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 1860,
+      "frame_end": 1930,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "CHAINGUN"
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      },
+      "notes": "this is a weapon pickup\n",
+      "edited_at": "2026-04-02T14:51:27",
+      "user_annotated": true
+    },
+    {
+      "clip_id": "ws_chainsaw_007",
+      "category": "weapon_pickup",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 840,
+      "frame_end": 910,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "CHAINSAW"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      },
+      "notes": "weapon pickup",
+      "edited_at": "2026-04-02T14:51:35",
+      "user_annotated": true
+    },
+    {
+      "clip_id": "ws_chainsaw_008",
+      "category": "weapon_switch",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 2693,
+      "frame_end": 2763,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SUPER_SHOTGUN",
+        "weapon_to": "CHAINSAW",
+        "switch_frame_before": 2720,
+        "switch_frame_after": 2737
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_fist_009",
+      "category": "weapon_switch",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 3356,
+      "frame_end": 3426,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "PISTOL",
+        "weapon_to": "FIST",
+        "switch_frame_before": 3383,
+        "switch_frame_after": 3400
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_super_shotgun_010",
+      "category": "weapon_switch",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 9714,
+      "frame_end": 9784,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "PISTOL",
+        "weapon_to": "SUPER_SHOTGUN",
+        "switch_frame_before": 9741,
+        "switch_frame_after": 9758
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_super_shotgun_011",
+      "category": "weapon_switch",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 3373,
+      "frame_end": 3443,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "FIST",
+        "weapon_to": "SUPER_SHOTGUN",
+        "switch_frame_before": 3400,
+        "switch_frame_after": 3417
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_super_shotgun_012",
+      "category": "weapon_switch",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 364,
+      "frame_end": 434,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "PISTOL",
+        "weapon_to": "SUPER_SHOTGUN",
+        "switch_frame_before": 391,
+        "switch_frame_after": 408
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_chaingun_013",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 6331,
+      "frame_end": 6401,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "CHAINSAW",
+        "weapon_to": "CHAINGUN",
+        "switch_frame_before": 6358,
+        "switch_frame_after": 6375
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_chainsaw_014",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 6212,
+      "frame_end": 6282,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "PISTOL",
+        "weapon_to": "CHAINSAW",
+        "switch_frame_before": 6239,
+        "switch_frame_after": 6256
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "clip_id": "ws_chainsaw_015",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 347,
+      "frame_end": 417,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SHOTGUN",
+        "weapon_to": "CHAINSAW",
+        "switch_frame_before": 374,
+        "switch_frame_after": 391
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_pistol_016",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 4580,
+      "frame_end": 4650,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "FIST",
+        "weapon_to": "PISTOL",
+        "switch_frame_before": 4607,
+        "switch_frame_after": 4624
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_rocket_launcher_017",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 1044,
+      "frame_end": 1114,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SUPER_SHOTGUN",
+        "weapon_to": "ROCKET_LAUNCHER",
+        "switch_frame_before": 1071,
+        "switch_frame_after": 1088
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_shotgun_018",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 8422,
+      "frame_end": 8492,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "FIST",
+        "weapon_to": "SHOTGUN",
+        "switch_frame_before": 8449,
+        "switch_frame_after": 8466
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_shotgun_019",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 2404,
+      "frame_end": 2474,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SUPER_SHOTGUN",
+        "weapon_to": "SHOTGUN",
+        "switch_frame_before": 2431,
+        "switch_frame_after": 2448
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_super_shotgun_020",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 2761,
+      "frame_end": 2831,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "PISTOL",
+        "weapon_to": "SUPER_SHOTGUN",
+        "switch_frame_before": 2788,
+        "switch_frame_after": 2805
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_super_shotgun_021",
+      "category": "weapon_switch",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 3373,
+      "frame_end": 3443,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "PLASMA_RIFLE",
+        "weapon_to": "SUPER_SHOTGUN",
+        "switch_frame_before": 3400,
+        "switch_frame_after": 3417
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "ws_chainsaw_022",
+      "category": "weapon_switch",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 5855,
+      "frame_end": 5925,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "FIST",
+        "weapon_to": "CHAINSAW",
+        "switch_frame_before": 5882,
+        "switch_frame_after": 5899
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_pistol_023",
+      "category": "weapon_switch",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 5617,
+      "frame_end": 5687,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "FIST",
+        "weapon_to": "PISTOL",
+        "switch_frame_before": 5644,
+        "switch_frame_after": 5661
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_pistol_024",
+      "category": "weapon_switch",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 993,
+      "frame_end": 1063,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "FIST",
+        "weapon_to": "PISTOL",
+        "switch_frame_before": 1020,
+        "switch_frame_after": 1037
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_plasma_rifle_025",
+      "category": "weapon_switch",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 3458,
+      "frame_end": 3528,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SHOTGUN",
+        "weapon_to": "PLASMA_RIFLE",
+        "switch_frame_before": 3485,
+        "switch_frame_after": 3502
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "ws_rocket_launcher_026",
+      "category": "weapon_switch",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 4682,
+      "frame_end": 4752,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_from": "SUPER_SHOTGUN",
+        "weapon_to": "ROCKET_LAUNCHER",
+        "switch_frame_before": 4709,
+        "switch_frame_after": 4726
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_from_matches": true,
+        "weapon_to_matches": true,
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "af_pistol_000",
+      "category": "attack_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 8642,
+      "frame_end": 8712,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "A distinct muzzle flash is visible at the barrel of the pistol in the final frame of the 'Gameplay during ATTACK' sequence. The weapon shown throughout the attack frames is consistently the pistol, matching the provided reference image.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_shotgun_001",
+      "category": "attack_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 9993,
+      "frame_end": 10063,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "ROCKET_LAUNCHER"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon shown in the ATTACK frames visually matches the reference SHOTGUN. Visible firing cues include a muzzle flash (bright orange/red glow) appearing at the barrel in frames 2-4, weapon recoil (the shotgun moves up and back) in frames 2-3, and the shotgun pump mechanism cycling back and forth in frames 5-6.",
+        "confidence": 1.0
+      },
+      "edited_at": "2026-04-02T14:52:27"
+    },
+    {
+      "clip_id": "af_super_shotgun_002",
+      "category": "attack_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 6991,
+      "frame_end": 7061,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the gameplay frames matches the double-barreled design and red/orange highlights of the SUPER_SHOTGUN reference. Firing is visible through a prominent red/orange muzzle flash in frames 3 and 4, accompanied by blood splatter on the enemy and a decrease in the 'SHKT' (shells) ammo count from 34 to 32. The weapon also visibly cycles after firing.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_shotgun_003",
+      "category": "attack_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 10071,
+      "frame_end": 10141,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "ROCKET_LAUNCHER"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon shown in the 'Gameplay during ATTACK' frames is visibly identical to the 'Reference (SHOTGUN)'. Firing is evident through a visible muzzle flash in frames 2-4, and the shotgun's recoil and pump action are visible in frame 5 as the weapon shifts upwards and the pump mechanism moves back.",
+        "confidence": 1.0
+      },
+      "edited_at": "2026-04-02T14:52:47"
+    },
+    {
+      "clip_id": "af_super_shotgun_004",
+      "category": "attack_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 3745,
+      "frame_end": 3815,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "In the fifth ATTACK frame, a muzzle flash is clearly visible from the weapon, and impact effects (particles and blood splatter) appear around the enemy, indicating firing. The weapon in all ATTACK frames, including the firing frame, is the distinct double-barreled Super Shotgun, matching the reference.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_shotgun_005",
+      "category": "attack_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 9835,
+      "frame_end": 9905,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon shown in the 'Gameplay during ATTACK' frames is clearly the Doom shotgun, matching the reference. A distinct orange muzzle flash is visible on the shotgun across several frames (frames 2-5) during the attack sequence.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_shotgun_006",
+      "category": "attack_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 9792,
+      "frame_end": 9862,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon matches the reference. Muzzle flash is clearly visible at the end of the barrel during the attack, and the ammo count decreases from 10 to 9.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_007",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 6513,
+      "frame_end": 6583,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon shown in the 'Gameplay during ATTACK' sequence is the PISTOL, matching the reference. A clear muzzle flash is visible in the final frame of the attack sequence, indicating visible firing.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_008",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 7153,
+      "frame_end": 7223,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon visible in the gameplay frames perfectly matches the PISTOL reference image. In the final frame of the gameplay sequence, a distinct muzzle flash is visible at the end of the pistol barrel, and the 'BULL' (bullets) count in the HUD decreases from 36 to 35, confirming a shot was fired.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_super_shotgun_009",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 10364,
+      "frame_end": 10434,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon shown in the 'Gameplay during ATTACK' frames is the Super Shotgun, matching the reference. In the final attack frame, a prominent red muzzle flash is visible, and the shell count decreases from 20 to 18, indicating a shot was fired.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_010",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 9534,
+      "frame_end": 9604,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The first frame of 'Gameplay during ATTACK' shows a clear muzzle flash and visible recoil from the pistol, which is identical to the weapon shown in the 'Reference (PISTOL)' image.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_shotgun_011",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 4789,
+      "frame_end": 4859,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon sprite in the 'Gameplay during ATTACK' frames is identical to the 'Reference (SHOTGUN)' sprite. During the attack sequence, a muzzle flash is clearly visible on the shotgun barrel in frames 2, 3, and 4. The weapon sprite shows distinct recoil and the pump action of the shotgun in frames 3, 4, and 5. The 'SHELL' ammo count also decrements from 40 to 39 after the first shot and then to 38, indicating ammunition consumption.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_012",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 7057,
+      "frame_end": 7127,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the attack frames is identical to the reference PISTOL. In the final attack frame, a prominent muzzle flash is visible, and the ammo count decreases from 39 to 38.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_013",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 6861,
+      "frame_end": 6931,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The pistol sprite in the 'Gameplay during ATTACK' frames is identical to the 'Reference (PISTOL)' sprite. In the last frame of the 'Gameplay during ATTACK' sequence, a clear muzzle flash is visible from the barrel of the pistol.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_014",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 7074,
+      "frame_end": 7144,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the attack frames is identical to the reference pistol. During the attack animation, a muzzle flash and a projectile are visible, and the pistol shows slight recoil by elevating before returning to its ready position.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_shotgun_015",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 5889,
+      "frame_end": 5959,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the attack sequence is visibly the same shotgun as in the reference. Firing is evident by a muzzle flash (orange glow at the barrel), visible recoil and pump action, and a decrease in ammo from 5 to 4 during the attack frames.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_016",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 9357,
+      "frame_end": 9427,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the 'Gameplay during ATTACK' frames is visually identical to the 'Reference (PISTOL)'. The first frame of the attack sequence clearly shows a muzzle flash emanating from the pistol barrel.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_017",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 6474,
+      "frame_end": 6544,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon held by the player throughout the ATTACK sequence is the pistol, matching the reference image. In frames 4 and 5 of the ATTACK sequence, a distinct muzzle flash is visible at the end of the pistol's barrel, and the bullet ammo count decreases from 47 to 46, indicating firing.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_018",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 9304,
+      "frame_end": 9374,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The pistol in the 'Gameplay during ATTACK' frames is identical to the reference pistol. In the final frame of the attack sequence, a clear muzzle flash is visible emanating from the barrel of the pistol.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_019",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 5451,
+      "frame_end": 5521,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The pistol in the attack sequence is identical to the reference pistol. A prominent muzzle flash is visible on the pistol in the last frame of the attack sequence.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_020",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 7028,
+      "frame_end": 7098,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The pistol model in the attack frames is identical to the reference. A bright muzzle flash is clearly visible in the first attack frame, followed by the weapon's recoil animation.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_021",
+      "category": "attack_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 6880,
+      "frame_end": 6950,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon shown during the 'ATTACK' sequence is visually identical to the 'PISTOL' reference image. In the final frame of the 'ATTACK' sequence, a bright orange muzzle flash is clearly visible emanating from the pistol's barrel, and the 'BULL' (bullets) ammo count changes from 44 to 43.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_super_shotgun_022",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 1528,
+      "frame_end": 1598,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The first frame of the ATTACK sequence shows a muzzle flash (red/orange) emanating from the barrels of the Super Shotgun, identical to the reference. The weapon exhibits recoil, moving upwards, and the ammo count for shells decreases from 20 to 18 (the Super Shotgun consumes 2 shells per shot). Subsequent frames show the distinctive pumping action (the orange part moving) of the Super Shotgun after firing.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_023",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 5809,
+      "frame_end": 5879,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the 'Gameplay during ATTACK' frames is identical to the 'Reference (PISTOL)'. A bright orange muzzle flash is clearly visible emanating from the barrel of the pistol in multiple frames during the 'ATTACK' sequence.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_024",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 5876,
+      "frame_end": 5946,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon shown in the 'Gameplay during ATTACK' frames is identical to the 'Reference (PISTOL)' weapon. In the last frame of the attack sequence, a clear muzzle flash is visible, indicating firing.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_super_shotgun_025",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 9655,
+      "frame_end": 9725,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the gameplay frames matches the SUPER_SHOTGUN reference. Visible muzzle flash is present in frames 4 and 5 of the ATTACK sequence, and the weapon's upward shift indicates recoil. The ammo count also decreases from 3 to 1, confirming a shot was fired.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_super_shotgun_026",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 10050,
+      "frame_end": 10120,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the gameplay frames matches the SUPER_SHOTGUN reference. A muzzle flash is visible in frames 2-3, followed by blood splatter on the enemy in frames 4-5 and the player character's face reflecting the impact/recoil.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_chainsaw_027",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 6647,
+      "frame_end": 6717,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "CHAINSAW"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the attack sequence is clearly the same chainsaw shown in the reference image. During the attack sequence, particularly in the fifth frame, a yellowish-orange impact particle effect is visible in the center of the screen, indicating the chainsaw's active attack or 'firing' despite not being a projectile weapon.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_pistol_028",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 5845,
+      "frame_end": 5915,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the 'Gameplay during ATTACK' sequence is visually identical to the 'Reference (PISTOL)'. A distinct muzzle flash is visible emanating from the pistol's barrel in frames 3, 4, and 5 of the attack sequence, indicating firing.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "af_super_shotgun_029",
+      "category": "attack_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 9843,
+      "frame_end": 9913,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "firing_visible": true,
+        "evidence": "The weapon in the gameplay frames is the Super Shotgun, matching the reference. Muzzle flash is visible in frames 3-4, and weapon recoil is evident throughout frames 3-5. The ammo count also decreases from 38 to 36, consistent with the Super Shotgun's two-shell per shot usage.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_000",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 6425,
+      "frame_end": 6495,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:55:13"
+    },
+    {
+      "clip_id": "anf_super_shotgun_001",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 3875,
+      "frame_end": 3945,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 0.9
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:55:15"
+    },
+    {
+      "clip_id": "anf_super_shotgun_002",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 2005,
+      "frame_end": 2075,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_003",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 7360,
+      "frame_end": 7430,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:55:22"
+    },
+    {
+      "clip_id": "anf_shotgun_004",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 2685,
+      "frame_end": 2755,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_005",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 390,
+      "frame_end": 460,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_006",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 5405,
+      "frame_end": 5475,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_007",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 5320,
+      "frame_end": 5390,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": false,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_008",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 7275,
+      "frame_end": 7345,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "clip_id": "anf_pistol_009",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 50,
+      "frame_end": 120,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_010",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 8210,
+      "frame_end": 8280,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_pistol_011",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 5065,
+      "frame_end": 5135,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_012",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 7445,
+      "frame_end": 7515,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_pistol_013",
+      "category": "attack_not_firing",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 730,
+      "frame_end": 800,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_014",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 7615,
+      "frame_end": 7685,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_015",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 10420,
+      "frame_end": 10468,
+      "duration_frames": 49,
+      "duration_sec": 1.4,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_shotgun_016",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 8720,
+      "frame_end": 8790,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_017",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 8550,
+      "frame_end": 8620,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_chainsaw_018",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 1325,
+      "frame_end": 1395,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "CHAINSAW"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_plasma_rifle_019",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 2005,
+      "frame_end": 2075,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PLASMA_RIFLE"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_shotgun_020",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 3875,
+      "frame_end": 3945,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_pistol_021",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 1835,
+      "frame_end": 1905,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_shotgun_022",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 4045,
+      "frame_end": 4115,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_shotgun_023",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 5830,
+      "frame_end": 5900,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_pistol_024",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 4980,
+      "frame_end": 5050,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "PISTOL"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_shotgun_025",
+      "category": "attack_not_firing",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 815,
+      "frame_end": 885,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_026",
+      "category": "attack_not_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 10165,
+      "frame_end": 10235,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_027",
+      "category": "attack_not_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 4215,
+      "frame_end": 4285,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_028",
+      "category": "attack_not_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 3535,
+      "frame_end": 3605,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "anf_super_shotgun_029",
+      "category": "attack_not_firing",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 2260,
+      "frame_end": 2330,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_type": "SUPER_SHOTGUN"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "weapon_matches": true,
+        "is_idle": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_000",
+      "category": "death_respawn",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 0,
+      "frame_end": 35,
+      "duration_frames": 36,
+      "duration_sec": 1.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns with the pistol in hand, indicated by the bright green/yellow teleportation effect and starting HUD stats (50 ammo, 100% health, 0% arms).",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:00.0",
+        "event_type": "respawn",
+        "description": "Player respawns with the pistol in hand, indicated by the bright green/yellow teleportation effect and starting HUD stats (50 ammo, 100% health, 0% arms).",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_001",
+      "category": "death_respawn",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 168,
+      "frame_end": 238,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns again with the pistol in hand, indicated by the bright green/yellow teleportation effect and starting HUD stats (50 ammo, 100% health, 0% arms, 1% kill tally in the next frame).",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:05.8",
+        "event_type": "respawn",
+        "description": "Player respawns again with the pistol in hand, indicated by the bright green/yellow teleportation effect and starting HUD stats (50 ammo, 100% health, 0% arms, 1% kill tally in the next frame).",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_002",
+      "category": "death_respawn",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 661,
+      "frame_end": 731,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawned, evidenced by the bright yellow/green screen flash, change of weapon to a pistol, reset of health to 100% and armor to 0%, and teleportation to a new location (an indoor corridor).",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:19.9",
+        "event_type": "respawn",
+        "description": "Player respawned, evidenced by the bright yellow/green screen flash, change of weapon to a pistol, reset of health to 100% and armor to 0%, and teleportation to a new location (an indoor corridor).",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_000",
+      "category": "kill",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 2643,
+      "frame_end": 2713,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "An Imp is gibbed by the player's super shotgun shot fired at 01:16.0.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "01:16.5",
+        "event_type": "kill",
+        "description": "An Imp is gibbed by the player's super shotgun shot fired at 01:16.0.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_001",
+      "category": "kill",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 3489,
+      "frame_end": 3559,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills an opponent (green armored player) with the plasma rifle. The opponent disappears into blue particles.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "01:40.7",
+        "event_type": "kill",
+        "description": "Player kills an opponent (green armored player) with the plasma rifle. The opponent disappears into blue particles.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_003",
+      "category": "death_respawn",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 4575,
+      "frame_end": 4645,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns at a new location with a pistol.",
+        "cause": ""
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "timestamp": "02:11.7",
+        "event_type": "respawn",
+        "description": "Player respawns at a new location with a pistol.",
+        "details": {},
+        "confidence": 0.9
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:56:41"
+    },
+    {
+      "clip_id": "dr_004",
+      "category": "death_respawn",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 5250,
+      "frame_end": 5320,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns. The screen is filled with a bright green/yellow pixelated flash, indicating a teleport. The player's health jumps from 39% to 100%, ammo for the current weapon (shotgun) is 50, and the environment changes from an outdoor area with an orange sky to a new indoor, metallic corridor.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:31.0",
+        "event_type": "respawn",
+        "description": "Player respawns. The screen is filled with a bright green/yellow pixelated flash, indicating a teleport. The player's health jumps from 39% to 100%, ammo for the current weapon (shotgun) is 50, and the environment changes from an outdoor area with an orange sky to a new indoor, metallic corridor.",
+        "details": {},
+        "confidence": 0.95
+      }
+    },
+    {
+      "clip_id": "kill_002",
+      "category": "kill",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 7011,
+      "frame_end": 7081,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Green soldier enemy killed by player's shotgun. The enemy disappears and blood spatters are left on the ground. No frag message is visible in the top-left corner.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "03:21.3",
+        "event_type": "kill",
+        "description": "Green soldier enemy killed by player's shotgun. The enemy disappears and blood spatters are left on the ground. No frag message is visible in the top-left corner.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_003",
+      "category": "kill",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 7199,
+      "frame_end": 7269,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Green soldier enemy killed by player's shotgun. The enemy disappears and an armor bonus pickup is left behind. No frag message is visible in the top-left corner.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "03:26.7",
+        "event_type": "kill",
+        "description": "Green soldier enemy killed by player's shotgun. The enemy disappears and an armor bonus pickup is left behind. No frag message is visible in the top-left corner.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_004",
+      "category": "kill",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 9111,
+      "frame_end": 9181,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Enemy (green armored soldier) gibs/disappears after being shot by the player.",
+        "weapon_used": ""
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "timestamp": "04:21.3",
+        "event_type": "kill",
+        "description": "Enemy (green armored soldier) gibs/disappears after being shot by the player.",
+        "details": {},
+        "confidence": 0.9
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:57:00"
+    },
+    {
+      "clip_id": "kill_005",
+      "category": "kill",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 9265,
+      "frame_end": 9335,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Enemy (green armored soldier) gibs/disappears after being shot by the player.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "04:25.7",
+        "event_type": "kill",
+        "description": "Enemy (green armored soldier) gibs/disappears after being shot by the player.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "dr_005",
+      "category": "death_respawn",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 0,
+      "frame_end": 35,
+      "duration_frames": 36,
+      "duration_sec": 1.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns with a bright green circular flame effect, appearing in a new location with the pistol equipped.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:00.0",
+        "event_type": "respawn",
+        "description": "Player respawns with a bright green circular flame effect, appearing in a new location with the pistol equipped.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_006",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 2439,
+      "frame_end": 2509,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills a former human with the plasma rifle. The enemy disappears, leaving behind a dropped weapon and a stimpack. The player's face shows a slight grin.",
+        "weapon_used": ""
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "timestamp": "01:10.7",
+        "event_type": "kill",
+        "description": "Player kills a former human with the plasma rifle. The enemy disappears, leaving behind a dropped weapon and a stimpack. The player's face shows a slight grin.",
+        "details": {},
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:57:23"
+    },
+    {
+      "clip_id": "kill_007",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 2576,
+      "frame_end": 2646,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills a second former human with the plasma rifle. The enemy disappears after being hit by plasma energy, and the player switches to the double-barreled shotgun.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "01:14.6",
+        "event_type": "kill",
+        "description": "Player kills a second former human with the plasma rifle. The enemy disappears after being hit by plasma energy, and the player switches to the double-barreled shotgun.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_008",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 4438,
+      "frame_end": 4508,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills a chaingunner with the chaingun. The enemy collapses into a heap.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:07.8",
+        "event_type": "kill",
+        "description": "Player kills a chaingunner with the chaingun. The enemy collapses into a heap.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_009",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 4659,
+      "frame_end": 4729,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills a second chaingunner with the chaingun. The enemy collapses into a heap.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:14.1",
+        "event_type": "kill",
+        "description": "Player kills a second chaingunner with the chaingun. The enemy collapses into a heap.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_010",
+      "category": "death_respawn",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 4809,
+      "frame_end": 4879,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills an enemy (named 'HUMAN') with a shotgun, confirmed by the frag message 'P1 1' appearing in the top-left corner.",
+        "weapon_used": "shotgun"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:18.4",
+        "event_type": "kill",
+        "description": "Player kills an enemy (named 'HUMAN') with a shotgun, confirmed by the frag message 'P1 1' appearing in the top-left corner.",
+        "details": {
+          "enemy_name": "HUMAN",
+          "weapon_used": "shotgun",
+          "frags_gained": 1
+        },
+        "confidence": 1.0
+      },
+      "edited_at": "2026-04-02T14:57:46"
+    },
+    {
+      "clip_id": "dr_006",
+      "category": "death_respawn",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 4827,
+      "frame_end": 4897,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns in a new location, indicated by a bright green and yellow circular teleportation effect. The player's health is reset to 50% and armor to 0%, and they are holding a shotgun.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:18.9",
+        "event_type": "respawn",
+        "description": "Player respawns in a new location, indicated by a bright green and yellow circular teleportation effect. The player's health is reset to 50% and armor to 0%, and they are holding a shotgun.",
+        "details": {
+          "new_location": true,
+          "starting_health": 50,
+          "starting_armor": 0,
+          "starting_weapon": "shotgun"
+        },
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_007",
+      "category": "death_respawn",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 5387,
+      "frame_end": 5457,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "The player's location instantly changes from a brown, metallic room to a green-walled corridor, and the weapon switches from a shotgun to the default pistol, indicating a respawn.",
+        "cause": ""
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "timestamp": "02:34.9",
+        "event_type": "respawn",
+        "description": "The player's location instantly changes from a brown, metallic room to a green-walled corridor, and the weapon switches from a shotgun to the default pistol, indicating a respawn.",
+        "details": {},
+        "confidence": 0.9
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:57:56"
+    },
+    {
+      "clip_id": "kill_011",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 5775,
+      "frame_end": 5845,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Shotgun Guy killed. The enemy sprite disappears after being shot by the player, and a shotgun weapon pickup appears in its place.",
+        "weapon_used": ""
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "timestamp": "02:46.0",
+        "event_type": "kill",
+        "description": "Shotgun Guy killed. The enemy sprite disappears after being shot by the player, and a shotgun weapon pickup appears in its place.",
+        "details": {
+          "enemy_type": "Shotgun Guy",
+          "weapon_used_by_player": "Shotgun",
+          "pickup_left": "Shotgun"
+        },
+        "confidence": 0.9
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:58:01"
+    },
+    {
+      "clip_id": "kill_012",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 5911,
+      "frame_end": 5981,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Chaingunner killed (gibbed) by the player. The enemy sprite disappears and is replaced by a red splatter animation. The player's rocket ammunition count decreased from 5 to 4, suggesting a rocket was fired.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:49.9",
+        "event_type": "kill",
+        "description": "Chaingunner killed (gibbed) by the player. The enemy sprite disappears and is replaced by a red splatter animation. The player's rocket ammunition count decreased from 5 to 4, suggesting a rocket was fired.",
+        "details": {
+          "enemy_type": "Chaingunner",
+          "weapon_used_by_player": "Rocket Launcher (implied by ammo change)",
+          "effect": "gibbed"
+        },
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_013",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 7756,
+      "frame_end": 7826,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player killed an enemy with a shotgun, causing them to gib.",
+        "weapon_used": "shotgun"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "03:42.6",
+        "event_type": "kill",
+        "description": "Player killed an enemy with a shotgun, causing them to gib.",
+        "details": {
+          "weapon_used": "shotgun",
+          "remaining_ammo": "14 shotgun shells",
+          "remaining_health": "79%"
+        },
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_014",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 8351,
+      "frame_end": 8421,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Enemy falls/gibs, frag message 'Player 2 got 1 frag!' appears in the top-left corner.",
+        "weapon_used": ""
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "timestamp": "03:59.6",
+        "event_type": "kill",
+        "description": "Enemy falls/gibs, frag message 'Player 2 got 1 frag!' appears in the top-left corner.",
+        "details": {},
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T14:58:17"
+    },
+    {
+      "clip_id": "kill_015",
+      "category": "kill",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 9181,
+      "frame_end": 9251,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills a Zombieman. The Zombieman falls to the ground after being shot.",
+        "weapon_used": "Pistol"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "04:23.3",
+        "event_type": "kill",
+        "description": "Player kills a Zombieman. The Zombieman falls to the ground after being shot.",
+        "details": {
+          "enemy_type": "Zombieman",
+          "weapon_used": "Pistol"
+        },
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "dr_008",
+      "category": "death_respawn",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 9601,
+      "frame_end": 9671,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "The player respawned, evidenced by a bright green and yellow teleportation flash, an immediate change to a new indoor environment from the previous outdoor area, health being reset to 100%, and the default pistol being in hand with 50 bullets.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "04:35.3",
+        "event_type": "respawn",
+        "description": "The player respawned, evidenced by a bright green and yellow teleportation flash, an immediate change to a new indoor environment from the previous outdoor area, health being reset to 100%, and the default pistol being in hand with 50 bullets.",
+        "details": {
+          "health_after_respawn": "100%",
+          "ammo_after_respawn": "50 (pistol bullets)",
+          "weapon_after_respawn": "pistol"
+        },
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_009",
+      "category": "death_respawn",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 0,
+      "frame_end": 35,
+      "duration_frames": 36,
+      "duration_sec": 1.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player character respawns with a bright yellow and green teleport effect. The player appears at a new location, starts with 100% health, and the pistol as the active weapon.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:00.0",
+        "event_type": "respawn",
+        "description": "Player character respawns with a bright yellow and green teleport effect. The player appears at a new location, starts with 100% health, and the pistol as the active weapon.",
+        "details": {},
+        "confidence": 0.95
+      }
+    },
+    {
+      "clip_id": "kill_016",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 1187,
+      "frame_end": 1257,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "An enemy marine is killed and gibbed by a rocket explosion. The player's frag count increases from 0 to 1.",
+        "weapon_used": "rocket launcher"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:34.9",
+        "event_type": "kill",
+        "description": "An enemy marine is killed and gibbed by a rocket explosion. The player's frag count increases from 0 to 1.",
+        "details": {
+          "enemy_type": "marine",
+          "weapon_used": "rocket launcher",
+          "frag_count_after_kill": 1
+        },
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_017",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 1607,
+      "frame_end": 1677,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills an Imp with the Super Shotgun. The frag count increases from 1 to 2.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:46.9",
+        "event_type": "kill",
+        "description": "Player kills an Imp with the Super Shotgun. The frag count increases from 1 to 2.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_018",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 2744,
+      "frame_end": 2814,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills an enemy marine with the Super Shotgun, causing them to gib.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "01:19.4",
+        "event_type": "kill",
+        "description": "Player kills an enemy marine with the Super Shotgun, causing them to gib.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_019",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 3167,
+      "frame_end": 3237,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Enemy player killed by plasma gun fire.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "01:31.5",
+        "event_type": "kill",
+        "description": "Enemy player killed by plasma gun fire.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_020",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 3525,
+      "frame_end": 3595,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Enemy player killed by shotgun blast.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "01:41.7",
+        "event_type": "kill",
+        "description": "Enemy player killed by shotgun blast.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_021",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 4368,
+      "frame_end": 4438,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills a Zombieman (shotgun guy) with the Super Shotgun. The enemy explodes into gibs, and the player's Super Shotgun ammo count decreases from 38 to 36.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:05.8",
+        "event_type": "kill",
+        "description": "Player kills a Zombieman (shotgun guy) with the Super Shotgun. The enemy explodes into gibs, and the player's Super Shotgun ammo count decreases from 38 to 36.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_022",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 4893,
+      "frame_end": 4963,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Enemy (Zombieman) gibbed by shotgun fire. No frag message visible in top-left corner.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:20.8",
+        "event_type": "kill",
+        "description": "Enemy (Zombieman) gibbed by shotgun fire. No frag message visible in top-left corner.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "kill_023",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 5113,
+      "frame_end": 5183,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Another enemy (Zombieman) eliminated by rocket launcher fire, resulting in gibs. No frag message visible in top-left corner.",
+        "weapon_used": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:27.1",
+        "event_type": "kill",
+        "description": "Another enemy (Zombieman) eliminated by rocket launcher fire, resulting in gibs. No frag message visible in top-left corner.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "dr_010",
+      "category": "death_respawn",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 5131,
+      "frame_end": 5201,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns at a new location with the pistol equipped.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:27.6",
+        "event_type": "respawn",
+        "description": "Player respawns at a new location with the pistol equipped.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "kill_024",
+      "category": "kill",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 5656,
+      "frame_end": 5726,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "description": "Player kills a green Zombieman/Marine. The enemy falls to the ground after being shot. (A frag message in the top-left corner was not visible in this frame sequence).",
+        "weapon_used": "Pistol"
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:42.6",
+        "event_type": "kill",
+        "description": "Player kills a green Zombieman/Marine. The enemy falls to the ground after being shot. (A frag message in the top-left corner was not visible in this frame sequence).",
+        "details": {
+          "enemy_type": "Zombieman/Marine",
+          "weapon_used": "Pistol",
+          "player_ammo_change": "157 -> 156"
+        },
+        "confidence": 0.8
+      }
+    },
+    {
+      "clip_id": "dr_011",
+      "category": "death_respawn",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 7277,
+      "frame_end": 7347,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "death",
+        "description": "Player's health dropped to 1% after taking sustained damage from an enemy player, resulting in death.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "03:28.9",
+        "event_type": "death",
+        "description": "Player's health dropped to 1% after taking sustained damage from an enemy player, resulting in death.",
+        "details": {},
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "dr_012",
+      "category": "death_respawn",
+      "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000002.tar",
+      "frame_start": 7283,
+      "frame_end": 7353,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawned via a bright green circular teleport effect in a new indoor location, with a pistol equipped, 50% health, and 100% armor.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "03:29.1",
+        "event_type": "respawn",
+        "description": "Player respawned via a bright green circular teleport effect in a new indoor location, with a pistol equipped, 50% health, and 100% armor.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_013",
+      "category": "death_respawn",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 1067,
+      "frame_end": 1137,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawns with a bright green teleport effect, appearing in a new indoor location. Player's health is reset to 100%, armor to 50%, and the pistol is equipped.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "00:31.5",
+        "event_type": "respawn",
+        "description": "Player respawns with a bright green teleport effect, appearing in a new indoor location. Player's health is reset to 100%, armor to 50%, and the pistol is equipped.",
+        "details": {
+          "initial_health": 100,
+          "initial_armor": 50,
+          "weapon_equipped": "pistol"
+        },
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_014",
+      "category": "death_respawn",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 5625,
+      "frame_end": 5695,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player character respawns, indicated by a bright green/yellow screen flash, a new location, health and armor values resetting (50% health, 0% armor), and the default pistol being equipped.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "02:41.7",
+        "event_type": "respawn",
+        "description": "Player character respawns, indicated by a bright green/yellow screen flash, a new location, health and armor values resetting (50% health, 0% armor), and the default pistol being equipped.",
+        "details": {},
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_015",
+      "category": "death_respawn",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 8281,
+      "frame_end": 8351,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "death",
+        "description": "Player's health drops to 0%, face icon shows death, and the score table confirms player (P1) was killed by 'HUMAN Sg'.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "03:57.6",
+        "event_type": "death",
+        "description": "Player's health drops to 0%, face icon shows death, and the score table confirms player (P1) was killed by 'HUMAN Sg'.",
+        "details": {
+          "killer": "HUMAN Sg",
+          "player_health_before_death": "5%"
+        },
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_016",
+      "category": "death_respawn",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 8299,
+      "frame_end": 8369,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Screen flashes bright green, player reappears at a new location with 50% health, 100% armor, and a pistol equipped.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "03:58.1",
+        "event_type": "respawn",
+        "description": "Screen flashes bright green, player reappears at a new location with 50% health, 100% armor, and a pistol equipped.",
+        "details": {
+          "initial_health": "50%",
+          "initial_armor": "100%",
+          "weapon": "pistol"
+        },
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "dr_017",
+      "category": "death_respawn",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 8484,
+      "frame_end": 8554,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "event_type": "respawn",
+        "description": "Player respawned at a new location with 100% health. The environment changed from an indoor corridor to a darker area leading to an outdoor segment, and the weapon switched to the pistol (visible at 04:03.9) with full starting ammo.",
+        "cause": ""
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "timestamp": "04:03.4",
+        "event_type": "respawn",
+        "description": "Player respawned at a new location with 100% health. The environment changed from an indoor corridor to a darker area leading to an outdoor segment, and the weapon switched to the pistol (visible at 04:03.9) with full starting ammo.",
+        "details": {
+          "health_after": "100%",
+          "ammo_after": "99 (pistol)",
+          "weapon_after": "Pistol",
+          "location_change": true,
+          "teleport_effect_visible": false
+        },
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "wp_chainsaw_000",
+      "category": "weapon_pickup",
+      "source_episode": "a2399a6f-1707-42f7-842e-a35a33071a9f",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000000.tar",
+      "frame_start": 5617,
+      "frame_end": 5687,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "CHAINSAW",
+        "pickup_frame_before": 5644,
+        "pickup_frame_after": 5661
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "wp_chaingun_001",
+      "category": "weapon_pickup",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 6926,
+      "frame_end": 6996,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "CHAINGUN",
+        "pickup_frame_before": 6953,
+        "pickup_frame_after": 6970
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T15:39:49"
+    },
+    {
+      "clip_id": "wp_chainsaw_002",
+      "category": "weapon_pickup",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 840,
+      "frame_end": 910,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "CHAINSAW",
+        "pickup_frame_before": 867,
+        "pickup_frame_after": 884
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": false,
+        "weapon_matches_ref": true,
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "wp_plasma_rifle_003",
+      "category": "weapon_pickup",
+      "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000001.tar",
+      "frame_start": 1860,
+      "frame_end": 1930,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "PLASMA_RIFLE",
+        "pickup_frame_before": 1887,
+        "pickup_frame_after": 1904
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": false,
+        "weapon_matches_ref": true,
+        "confidence": 0.9
+      }
+    },
+    {
+      "clip_id": "wp_chaingun_004",
+      "category": "weapon_pickup",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 5464,
+      "frame_end": 5534,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "CHAINGUN",
+        "pickup_frame_before": 5491,
+        "pickup_frame_after": 5508
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "wp_chainsaw_005",
+      "category": "weapon_pickup",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 5855,
+      "frame_end": 5925,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "CHAINSAW",
+        "pickup_frame_before": 5882,
+        "pickup_frame_after": 5899
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "wp_rocket_launcher_006",
+      "category": "weapon_pickup",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 5532,
+      "frame_end": 5602,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "ROCKET_LAUNCHER",
+        "pickup_frame_before": 5559,
+        "pickup_frame_after": 5576
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T15:40:10"
+    },
+    {
+      "clip_id": "wp_rocket_launcher_007",
+      "category": "weapon_pickup",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 4682,
+      "frame_end": 4752,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "ROCKET_LAUNCHER",
+        "pickup_frame_before": 4709,
+        "pickup_frame_after": 4726
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "wp_rocket_launcher_008",
+      "category": "weapon_pickup",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 908,
+      "frame_end": 978,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "ROCKET_LAUNCHER",
+        "pickup_frame_before": 935,
+        "pickup_frame_after": 952
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T15:40:20"
+    },
+    {
+      "clip_id": "wp_shotgun_009",
+      "category": "weapon_pickup",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 8371,
+      "frame_end": 8441,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "SHOTGUN",
+        "pickup_frame_before": 8398,
+        "pickup_frame_after": 8415
+      },
+      "gemini_verified": true,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": true,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      }
+    },
+    {
+      "clip_id": "wp_super_shotgun_010",
+      "category": "weapon_pickup",
+      "source_episode": "15ca39e9-9e26-474c-a557-8991770c6049",
+      "source_player": "p1",
+      "source_shard": "recordings/human-000003.tar",
+      "frame_start": 2149,
+      "frame_end": 2219,
+      "duration_frames": 71,
+      "duration_sec": 2.03,
+      "fps": 35,
+      "ground_truth": {
+        "weapon_picked_up": "SUPER_SHOTGUN",
+        "pickup_frame_before": 2176,
+        "pickup_frame_after": 2193
+      },
+      "gemini_verified": false,
+      "gemini_response": {
+        "verified": true,
+        "pickup_visible": false,
+        "weapon_matches_ref": true,
+        "confidence": 1.0
+      },
+      "notes": " [marked bad]",
+      "edited_at": "2026-04-02T15:40:30"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "clip_id": "dr_005",
+  "category": "death_respawn",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 0,
+  "frame_end": 35,
+  "duration_frames": 36,
+  "duration_sec": 1.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "Player respawns with a bright green circular flame effect, appearing in a new location with the pistol equipped.",
+    "cause": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "00:00.0",
+    "event_type": "respawn",
+    "description": "Player respawns with a bright green circular flame effect, appearing in a new location with the pistol equipped.",
+    "details": {},
+    "confidence": 1.0
+  }
+}

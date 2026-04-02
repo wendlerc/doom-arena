@@ -1,0 +1,27 @@
+{
+  "clip_id": "dr_007",
+  "category": "death_respawn",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 5387,
+  "frame_end": 5457,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "event_type": "respawn",
+    "description": "The player's location instantly changes from a brown, metallic room to a green-walled corridor, and the weapon switches from a shotgun to the default pistol, indicating a respawn.",
+    "cause": ""
+  },
+  "gemini_verified": false,
+  "gemini_response": {
+    "timestamp": "02:34.9",
+    "event_type": "respawn",
+    "description": "The player's location instantly changes from a brown, metallic room to a green-walled corridor, and the weapon switches from a shotgun to the default pistol, indicating a respawn.",
+    "details": {},
+    "confidence": 0.9
+  },
+  "notes": " [marked bad]",
+  "edited_at": "2026-04-02T14:57:56"
+}

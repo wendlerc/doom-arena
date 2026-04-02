@@ -1,0 +1,25 @@
+{
+  "clip_id": "ws_pistol_016",
+  "category": "weapon_switch",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 4580,
+  "frame_end": 4650,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_from": "FIST",
+    "weapon_to": "PISTOL",
+    "switch_frame_before": 4607,
+    "switch_frame_after": 4624
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_from_matches": true,
+    "weapon_to_matches": true,
+    "confidence": 1.0
+  }
+}

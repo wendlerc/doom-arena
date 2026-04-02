@@ -1,0 +1,22 @@
+{
+  "clip_id": "anf_super_shotgun_026",
+  "category": "attack_not_firing",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 10165,
+  "frame_end": 10235,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_type": "SUPER_SHOTGUN"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_matches": true,
+    "is_idle": true,
+    "confidence": 1.0
+  }
+}

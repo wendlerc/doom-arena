@@ -1,0 +1,13 @@
+{
+  "weapons": {
+    "CHAINGUN": "chaingun.jpg",
+    "CHAINSAW": "chainsaw.jpg",
+    "FIST": "fist.jpg",
+    "PISTOL": "pistol.jpg",
+    "PLASMA_RIFLE": "plasma_rifle.jpg",
+    "ROCKET_LAUNCHER": "rocket_launcher.jpg",
+    "SHOTGUN": "shotgun.jpg",
+    "SUPER_SHOTGUN": "super_shotgun.jpg"
+  },
+  "note": "Reference frames identified by Gemini from human+PvP gameplay. Action slot mapping is unreliable - use visual identification only."
+}

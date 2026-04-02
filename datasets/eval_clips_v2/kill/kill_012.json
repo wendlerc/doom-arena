@@ -1,0 +1,28 @@
+{
+  "clip_id": "kill_012",
+  "category": "kill",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 5911,
+  "frame_end": 5981,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Chaingunner killed (gibbed) by the player. The enemy sprite disappears and is replaced by a red splatter animation. The player's rocket ammunition count decreased from 5 to 4, suggesting a rocket was fired.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "02:49.9",
+    "event_type": "kill",
+    "description": "Chaingunner killed (gibbed) by the player. The enemy sprite disappears and is replaced by a red splatter animation. The player's rocket ammunition count decreased from 5 to 4, suggesting a rocket was fired.",
+    "details": {
+      "enemy_type": "Chaingunner",
+      "weapon_used_by_player": "Rocket Launcher (implied by ammo change)",
+      "effect": "gibbed"
+    },
+    "confidence": 1.0
+  }
+}

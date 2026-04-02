@@ -1,0 +1,24 @@
+{
+  "clip_id": "kill_018",
+  "category": "kill",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 2744,
+  "frame_end": 2814,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Player kills an enemy marine with the Super Shotgun, causing them to gib.",
+    "weapon_used": ""
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "01:19.4",
+    "event_type": "kill",
+    "description": "Player kills an enemy marine with the Super Shotgun, causing them to gib.",
+    "details": {},
+    "confidence": 0.9
+  }
+}

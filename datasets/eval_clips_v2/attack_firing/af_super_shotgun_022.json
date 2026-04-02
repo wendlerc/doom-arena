@@ -1,0 +1,23 @@
+{
+  "clip_id": "af_super_shotgun_022",
+  "category": "attack_firing",
+  "source_episode": "296eee68-f0e7-4113-af6f-1695a7f3c9de",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000002.tar",
+  "frame_start": 1528,
+  "frame_end": 1598,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_type": "SUPER_SHOTGUN"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_matches": true,
+    "firing_visible": true,
+    "evidence": "The first frame of the ATTACK sequence shows a muzzle flash (red/orange) emanating from the barrels of the Super Shotgun, identical to the reference. The weapon exhibits recoil, moving upwards, and the ammo count for shells decreases from 20 to 18 (the Super Shotgun consumes 2 shells per shot). Subsequent frames show the distinctive pumping action (the orange part moving) of the Super Shotgun after firing.",
+    "confidence": 1.0
+  }
+}

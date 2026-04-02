@@ -1,0 +1,23 @@
+{
+  "clip_id": "af_pistol_021",
+  "category": "attack_firing",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 6880,
+  "frame_end": 6950,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "weapon_type": "PISTOL"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "verified": true,
+    "weapon_matches": true,
+    "firing_visible": true,
+    "evidence": "The weapon shown during the 'ATTACK' sequence is visually identical to the 'PISTOL' reference image. In the final frame of the 'ATTACK' sequence, a bright orange muzzle flash is clearly visible emanating from the pistol's barrel, and the 'BULL' (bullets) ammo count changes from 44 to 43.",
+    "confidence": 1.0
+  }
+}

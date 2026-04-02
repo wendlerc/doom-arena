@@ -1,0 +1,28 @@
+{
+  "clip_id": "kill_013",
+  "category": "kill",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 7756,
+  "frame_end": 7826,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Player killed an enemy with a shotgun, causing them to gib.",
+    "weapon_used": "shotgun"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "03:42.6",
+    "event_type": "kill",
+    "description": "Player killed an enemy with a shotgun, causing them to gib.",
+    "details": {
+      "weapon_used": "shotgun",
+      "remaining_ammo": "14 shotgun shells",
+      "remaining_health": "79%"
+    },
+    "confidence": 0.9
+  }
+}

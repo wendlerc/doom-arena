@@ -1,0 +1,27 @@
+{
+  "clip_id": "kill_015",
+  "category": "kill",
+  "source_episode": "898dcf17-0786-43ce-a0fa-9d7b9348dbe8",
+  "source_player": "p1",
+  "source_shard": "recordings/human-000001.tar",
+  "frame_start": 9181,
+  "frame_end": 9251,
+  "duration_frames": 71,
+  "duration_sec": 2.03,
+  "fps": 35,
+  "ground_truth": {
+    "description": "Player kills a Zombieman. The Zombieman falls to the ground after being shot.",
+    "weapon_used": "Pistol"
+  },
+  "gemini_verified": true,
+  "gemini_response": {
+    "timestamp": "04:23.3",
+    "event_type": "kill",
+    "description": "Player kills a Zombieman. The Zombieman falls to the ground after being shot.",
+    "details": {
+      "enemy_type": "Zombieman",
+      "weapon_used": "Pistol"
+    },
+    "confidence": 0.9
+  }
+}
